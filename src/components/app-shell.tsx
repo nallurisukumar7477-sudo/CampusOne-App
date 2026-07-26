@@ -9,6 +9,7 @@ import {
   Bell,
   ChevronsLeft,
   ChevronsRight,
+  ClipboardCheck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
