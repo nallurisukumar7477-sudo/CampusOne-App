@@ -489,8 +489,8 @@ function TimetableCard() {
             </div>
           ))}
           {days.map((d) => (
-            <>
-              <div key={`${d}-l`} className="grid place-items-center text-xs font-semibold text-muted-foreground">
+            <Fragment key={d}>
+              <div className="grid place-items-center text-xs font-semibold text-muted-foreground">
                 {d}
               </div>
               {slots.map((s) => {
@@ -507,7 +507,8 @@ function TimetableCard() {
                   </div>
                 );
               })}
-            </>
+            </Fragment>
+
           ))}
         </div>
       </div>
