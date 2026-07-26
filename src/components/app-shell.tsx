@@ -198,6 +198,7 @@ function NavLinks({
   const { location } = useRouterState();
   const items = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
   return (
