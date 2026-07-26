@@ -345,12 +345,11 @@ function FacultyAttendance({ userId }: { userId: string }) {
   });
 
   // Prime marks from existing records whenever they change
-  useMemo(() => {
+  useEffect(() => {
     if (!existing) return;
     const next: Record<string, "present" | "absent"> = {};
     for (const r of existing) next[r.student_id] = r.status as "present" | "absent";
     setMarks(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing]);
 
   const filteredStudents = (students ?? []).filter((s) => {
