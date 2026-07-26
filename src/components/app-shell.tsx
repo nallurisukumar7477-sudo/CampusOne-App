@@ -9,6 +9,7 @@ import {
   Bell,
   ChevronsLeft,
   ChevronsRight,
+  ClipboardCheck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -197,6 +198,7 @@ function NavLinks({
   const { location } = useRouterState();
   const items = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
   return (
