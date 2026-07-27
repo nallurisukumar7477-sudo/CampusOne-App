@@ -55,6 +55,44 @@ export type Database = {
           },
         ]
       }
+      courses: {
+        Row: {
+          code: string
+          created_at: string
+          department_id: string
+          duration_years: number
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          department_id: string
+          duration_years?: number
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          department_id?: string
+          duration_years?: number
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           code: string
@@ -76,8 +114,49 @@ export type Database = {
         }
         Relationships: []
       }
+      faculty_assignments: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          id: string
+          section_id: string
+          subject_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          id?: string
+          section_id: string
+          subject_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          section_id?: string
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faculty_assignments_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faculty_assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          avatar_url: string | null
+          course_id: string | null
           created_at: string
           department_id: string | null
           email: string
@@ -85,9 +164,15 @@ export type Database = {
           id: string
           identifier: string | null
           phone: string | null
+          profile_completed: boolean
+          roll_number: string | null
+          section_id: string | null
+          semester: number | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          course_id?: string | null
           created_at?: string
           department_id?: string | null
           email: string
@@ -95,9 +180,15 @@ export type Database = {
           id: string
           identifier?: string | null
           phone?: string | null
+          profile_completed?: boolean
+          roll_number?: string | null
+          section_id?: string | null
+          semester?: number | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          course_id?: string | null
           created_at?: string
           department_id?: string | null
           email?: string
@@ -105,14 +196,67 @@ export type Database = {
           id?: string
           identifier?: string | null
           phone?: string | null
+          profile_completed?: boolean
+          roll_number?: string | null
+          section_id?: string | null
+          semester?: number | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sections: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          name: string
+          semester: number
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          name: string
+          semester: number
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          semester?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
         ]
