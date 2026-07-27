@@ -10,6 +10,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ClipboardCheck,
+  UserCircle,
+  BookOpen,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,8 @@ import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, roles, isAdmin } = useAuth();
+  const isFaculty = roles.some((r) => ["faculty", "hod", "principal"].includes(r));
+  const isStudent = roles.includes("student");
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
@@ -67,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="flex h-full flex-col p-4">
                 <BrandMark />
                 <div className="mt-6 space-y-1">
-                  <NavLinks isAdmin={isAdmin} onNavigate={() => setOpen(false)} collapsed={false} />
+                  <NavLinks isAdmin={isAdmin} isFaculty={isFaculty} isStudent={isStudent} onNavigate={() => setOpen(false)} collapsed={false} />
                 </div>
               </div>
             </SheetContent>
@@ -131,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="hidden md:block">
           <div className="sticky top-24 space-y-2 rounded-3xl border border-border/60 bg-card/70 p-3 shadow-[var(--shadow-elegant)] backdrop-blur-xl">
             <div className="space-y-1">
-              <NavLinks isAdmin={isAdmin} onNavigate={() => {}} collapsed={collapsed} />
+              <NavLinks isAdmin={isAdmin} isFaculty={isFaculty} isStudent={isStudent} onNavigate={() => {}} collapsed={collapsed} />
             </div>
             <div className="mt-2 border-t border-border/60 pt-3">
               {!collapsed && (
@@ -188,17 +192,23 @@ function BrandMark() {
 
 function NavLinks({
   isAdmin,
+  isFaculty,
+  isStudent,
   onNavigate,
   collapsed,
 }: {
   isAdmin: boolean;
+  isFaculty: boolean;
+  isStudent: boolean;
   onNavigate: () => void;
   collapsed: boolean;
 }) {
   const { location } = useRouterState();
   const items = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ...(isFaculty ? [{ to: "/faculty", label: "My classes", icon: BookOpen }] : []),
     { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
+    ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
   return (
