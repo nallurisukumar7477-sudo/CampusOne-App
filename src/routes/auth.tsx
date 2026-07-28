@@ -196,3 +196,12 @@ function AuthPage() {
     </div>
   );
 }
+
+function ReqItem({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <li className={cn("flex items-center gap-1.5", ok && "text-emerald-600")}>
+      {ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5 text-muted-foreground/60" />}
+      <span>{label}</span>
+    </li>
+  );
+}
