@@ -28,6 +28,27 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const pwChecks = useMemo(() => {
+    return {
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      symbol: /[^A-Za-z0-9]/.test(password),
+    };
+  }, [password]);
+
+  const pwScore = Object.values(pwChecks).filter(Boolean).length;
+  const pwStrength =
+    password.length === 0
+      ? null
+      : pwScore <= 2
+        ? { label: "Weak", tone: "bg-destructive", text: "text-destructive", width: "w-1/3" }
+        : pwScore <= 4
+          ? { label: "Medium", tone: "bg-amber-500", text: "text-amber-600", width: "w-2/3" }
+          : { label: "Strong", tone: "bg-emerald-500", text: "text-emerald-600", width: "w-full" };
 
   useEffect(() => {
     if (!loading && session) void navigate({ to: "/dashboard", replace: true });
