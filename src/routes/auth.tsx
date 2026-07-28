@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { GraduationCap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Eye, EyeOff, GraduationCap, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -27,6 +28,27 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const pwChecks = useMemo(() => {
+    return {
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      symbol: /[^A-Za-z0-9]/.test(password),
+    };
+  }, [password]);
+
+  const pwScore = Object.values(pwChecks).filter(Boolean).length;
+  const pwStrength =
+    password.length === 0
+      ? null
+      : pwScore <= 2
+        ? { label: "Weak", tone: "bg-destructive", text: "text-destructive", width: "w-1/3" }
+        : pwScore <= 4
+          ? { label: "Medium", tone: "bg-amber-500", text: "text-amber-600", width: "w-2/3" }
+          : { label: "Strong", tone: "bg-emerald-500", text: "text-emerald-600", width: "w-full" };
 
   useEffect(() => {
     if (!loading && session) void navigate({ to: "/dashboard", replace: true });
@@ -106,16 +128,56 @@ function AuthPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={mode === "signup" ? 8 : 6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {mode === "signup" && (
+                  <div className="space-y-2 pt-1">
+                    {pwStrength && (
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all duration-300",
+                              pwStrength.tone,
+                              pwStrength.width,
+                            )}
+                          />
+                        </div>
+                        <div className={cn("text-xs font-medium", pwStrength.text)}>
+                          {pwStrength.label} password
+                        </div>
+                      </div>
+                    )}
+                    <ul className="grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                      <ReqItem ok={pwChecks.length} label="At least 8 characters" />
+                      <ReqItem ok={pwChecks.upper} label="One uppercase letter" />
+                      <ReqItem ok={pwChecks.lower} label="One lowercase letter" />
+                      <ReqItem ok={pwChecks.number} label="One number" />
+                      <ReqItem ok={pwChecks.symbol} label="One symbol" />
+                    </ul>
+                  </div>
+                )}
               </div>
+
 
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
@@ -132,5 +194,14 @@ function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ReqItem({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <li className={cn("flex items-center gap-1.5", ok && "text-emerald-600")}>
+      {ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5 text-muted-foreground/60" />}
+      <span>{label}</span>
+    </li>
   );
 }
