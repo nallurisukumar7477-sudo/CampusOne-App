@@ -128,16 +128,56 @@ function AuthPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={mode === "signup" ? 8 : 6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {mode === "signup" && (
+                  <div className="space-y-2 pt-1">
+                    {pwStrength && (
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all duration-300",
+                              pwStrength.tone,
+                              pwStrength.width,
+                            )}
+                          />
+                        </div>
+                        <div className={cn("text-xs font-medium", pwStrength.text)}>
+                          {pwStrength.label} password
+                        </div>
+                      </div>
+                    )}
+                    <ul className="grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                      <ReqItem ok={pwChecks.length} label="At least 8 characters" />
+                      <ReqItem ok={pwChecks.upper} label="One uppercase letter" />
+                      <ReqItem ok={pwChecks.lower} label="One lowercase letter" />
+                      <ReqItem ok={pwChecks.number} label="One number" />
+                      <ReqItem ok={pwChecks.symbol} label="One symbol" />
+                    </ul>
+                  </div>
+                )}
               </div>
+
 
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
