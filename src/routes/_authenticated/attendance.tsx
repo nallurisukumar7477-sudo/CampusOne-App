@@ -47,20 +47,14 @@ function AttendancePage() {
   );
 
   if (loading || !user) {
-    return (
-      <AppShell>
-        <PageSkeleton />
-      </AppShell>
-    );
+    return <PageSkeleton />;
   }
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        <Header isStaff={isStaff} />
-        {isStaff ? <FacultyAttendance userId={user.id} /> : <StudentAttendance userId={user.id} />}
-      </div>
-    </AppShell>
+    <div className="space-y-6">
+      <Header isStaff={isStaff} />
+      {isStaff ? <FacultyAttendance userId={user.id} /> : <StudentAttendance userId={user.id} />}
+    </div>
   );
 }
 
