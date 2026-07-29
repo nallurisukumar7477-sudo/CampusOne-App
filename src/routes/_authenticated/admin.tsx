@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
+import { specializationsFor } from "@/lib/specializations";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -597,6 +598,18 @@ function UsersPanel() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Role removed"); qc.invalidateQueries({ queryKey: ["admin-roles"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteProfile = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("profiles").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Profile deleted");
+      qc.invalidateQueries({ queryKey: ["admin-profiles"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
