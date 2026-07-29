@@ -967,3 +967,32 @@ interface AssignmentRow {
 function EmptyState({ label }: { label: string }) {
   return <p className="p-6 text-center text-sm text-muted-foreground">{label}</p>;
 }
+
+function SpecializationField({
+  state,
+  setState,
+  departments,
+}: {
+  state: ProfileRow;
+  setState: (p: ProfileRow) => void;
+  departments: Array<{ id: string; name: string; code: string }>;
+}) {
+  const dept = departments.find((d) => d.id === state.department_id);
+  const options = specializationsFor(dept?.code);
+  if (options.length === 0) return null;
+  return (
+    <div>
+      <Label>Specialization</Label>
+      <Select
+        value={state.specialization ?? ""}
+        onValueChange={(v) => setState({ ...state, specialization: v })}
+      >
+        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+        <SelectContent>
+          {options.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+}
