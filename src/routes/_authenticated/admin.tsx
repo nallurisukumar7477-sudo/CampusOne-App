@@ -519,7 +519,7 @@ interface ProfileRow {
   full_name: string;
   email: string;
   phone: string | null;
-  roll_number: string | null;
+  specialization: string | null;
   department_id: string | null;
   course_id: string | null;
   section_id: string | null;
@@ -537,7 +537,7 @@ function UsersPanel() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, phone, roll_number, department_id, course_id, section_id, semester")
+        .select("id, full_name, email, phone, specialization, department_id, course_id, section_id, semester")
         .order("full_name");
       if (error) throw error;
       return data as ProfileRow[];
@@ -576,7 +576,8 @@ function UsersPanel() {
       return (
         p.full_name.toLowerCase().includes(term) ||
         p.email.toLowerCase().includes(term) ||
-        (p.roll_number ?? "").toLowerCase().includes(term)
+        (p.phone ?? "").toLowerCase().includes(term) ||
+        (p.specialization ?? "").toLowerCase().includes(term)
       );
     });
   }, [profiles, rolesByUser, tab, q]);
