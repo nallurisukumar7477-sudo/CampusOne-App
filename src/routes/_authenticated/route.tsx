@@ -49,9 +49,7 @@ function ProfileGate({ children }: { children: React.ReactNode }) {
     if (loading || !user || !isStudent || isStaff) return;
     if (!profile) return;
     const onSetup = location.pathname === "/profile-setup";
-    if (!profile.profile_completed && !onSetup) {
-      void navigate({ to: "/profile-setup", replace: true });
-    } else if (profile.profile_completed && onSetup) {
+    if (profile.profile_completed && onSetup) {
       void navigate({ to: "/dashboard", replace: true });
     }
   }, [profile, isStudent, isStaff, location.pathname, loading, user, navigate]);
