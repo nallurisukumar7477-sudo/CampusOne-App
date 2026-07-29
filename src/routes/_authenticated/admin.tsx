@@ -630,13 +630,24 @@ function UsersPanel() {
                     <div className="truncate font-semibold">{p.full_name || "(no name)"}</div>
                     <div className="truncate text-xs text-muted-foreground">
                       {p.email}
-                      {p.roll_number ? ` · ${p.roll_number}` : ""}
                       {p.phone ? ` · ${p.phone}` : ""}
+                      {p.specialization ? ` · ${p.specialization}` : ""}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => setEditUser(p)}>
                       <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Delete ${p.full_name || p.email}? This removes their profile.`)) {
+                          deleteProfile.mutate(p.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5 text-destructive" /> Delete
                     </Button>
                   </div>
                 </div>
@@ -697,13 +708,13 @@ function EditUserDialog({ user, onClose }: { user: ProfileRow | null; onClose: (
       const { error } = await supabase.from("profiles").update({
         full_name: state.full_name.trim(),
         phone: state.phone?.trim() || null,
-        roll_number: state.roll_number?.trim() || null,
+        specialization: state.specialization?.trim() || null,
         department_id: state.department_id,
         course_id: state.course_id,
         section_id: state.section_id,
         semester: state.semester,
         profile_completed: true,
-      }).eq("id", state.id);
+      } as never).eq("id", state.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -725,14 +736,13 @@ function EditUserDialog({ user, onClose }: { user: ProfileRow | null; onClose: (
             <Input value={state.full_name} onChange={(e) => setState({ ...state, full_name: e.target.value })} /></div>
           <div><Label>Phone</Label>
             <Input value={state.phone ?? ""} onChange={(e) => setState({ ...state, phone: e.target.value })} /></div>
-          <div><Label>Roll number</Label>
-            <Input value={state.roll_number ?? ""} onChange={(e) => setState({ ...state, roll_number: e.target.value })} /></div>
           <div><Label>Department</Label>
-            <Select value={state.department_id ?? ""} onValueChange={(v) => setState({ ...state, department_id: v, course_id: null, section_id: null })}>
+            <Select value={state.department_id ?? ""} onValueChange={(v) => setState({ ...state, department_id: v, specialization: null, course_id: null, section_id: null })}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>{departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+          <SpecializationField state={state} setState={setState} departments={departments} />
           <div><Label>Course</Label>
             <Select value={state.course_id ?? ""} onValueChange={(v) => setState({ ...state, course_id: v, section_id: null })} disabled={!state.department_id}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
