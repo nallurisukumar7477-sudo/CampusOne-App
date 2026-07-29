@@ -26,7 +26,7 @@ interface FullProfile {
   full_name: string;
   email: string;
   phone: string | null;
-  roll_number: string | null;
+  specialization: string | null;
   semester: number | null;
   avatar_url: string | null;
   department: { name: string } | null;
@@ -48,7 +48,7 @@ function ProfilePage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, email, phone, roll_number, semester, avatar_url, department:departments(name), course:courses(name, code), section:sections(name)",
+          "id, full_name, email, phone, specialization, semester, avatar_url, department:departments(name), course:courses(name, code), section:sections(name)",
         )
         .eq("id", user!.id)
         .maybeSingle();
@@ -187,17 +187,19 @@ function ProfilePage() {
         <div className="space-y-5">
           <ReadOnly label="Full name" value={profile.full_name} />
           <ReadOnly label="Email" value={profile.email} />
-          <ReadOnly label="Roll number" value={profile.roll_number ?? "—"} locked />
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <ReadOnly label="Department" value={profile.department?.name ?? "—"} locked />
+            <ReadOnly label="Specialization" value={profile.specialization ?? "—"} locked />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
             <ReadOnly
               label="Course"
               value={profile.course ? `${profile.course.name} (${profile.course.code})` : "—"}
               locked
             />
             <ReadOnly label="Semester" value={profile.semester ? `Sem ${profile.semester}` : "—"} locked />
+            <ReadOnly label="Section" value={profile.section?.name ? `Section ${profile.section.name}` : "—"} locked />
           </div>
-          <ReadOnly label="Section" value={profile.section?.name ? `Section ${profile.section.name}` : "—"} locked />
 
           <form
             onSubmit={(e) => {

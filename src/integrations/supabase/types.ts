@@ -168,6 +168,7 @@ export type Database = {
           roll_number: string | null
           section_id: string | null
           semester: number | null
+          specialization: string | null
           updated_at: string
         }
         Insert: {
@@ -184,6 +185,7 @@ export type Database = {
           roll_number?: string | null
           section_id?: string | null
           semester?: number | null
+          specialization?: string | null
           updated_at?: string
         }
         Update: {
@@ -200,6 +202,7 @@ export type Database = {
           roll_number?: string | null
           section_id?: string | null
           semester?: number | null
+          specialization?: string | null
           updated_at?: string
         }
         Relationships: [

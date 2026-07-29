@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Camera, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { specializationsFor } from "@/lib/specializations";
 
 export const Route = createFileRoute("/_authenticated/profile-setup")({
   component: ProfileSetupPage,
@@ -29,14 +31,17 @@ export const Route = createFileRoute("/_authenticated/profile-setup")({
 function ProfileSetupPage() {
   const { user, refreshRoles } = useAuth();
   const navigate = useNavigate();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState("");
-  const [rollNumber, setRollNumber] = useState("");
+  const [phone, setPhone] = useState("");
   const [departmentId, setDepartmentId] = useState<string>("");
+  const [specialization, setSpecialization] = useState<string>("");
   const [courseId, setCourseId] = useState<string>("");
   const [semester, setSemester] = useState<string>("");
   const [sectionId, setSectionId] = useState<string>("");
-  const [phone, setPhone] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: profile } = useQuery({
     enabled: !!user,
@@ -59,12 +64,12 @@ function ProfileSetupPage() {
       return;
     }
     setFullName(profile.full_name ?? "");
-    setRollNumber(profile.roll_number ?? "");
+    setPhone(profile.phone ?? "");
     setDepartmentId(profile.department_id ?? "");
+    setSpecialization((profile as { specialization?: string | null }).specialization ?? "");
     setCourseId(profile.course_id ?? "");
     setSemester(profile.semester ? String(profile.semester) : "");
     setSectionId(profile.section_id ?? "");
-    setPhone(profile.phone ?? "");
   }, [profile, navigate]);
 
   const { data: departments = [] } = useQuery({
@@ -72,12 +77,16 @@ function ProfileSetupPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("departments")
-        .select("id, name")
+        .select("id, name, code")
         .order("name");
       if (error) throw error;
       return data;
     },
   });
+
+  const activeDept = departments.find((d) => d.id === departmentId);
+  const specOptions = specializationsFor(activeDept?.code);
+  const needsSpec = specOptions.length > 0;
 
   const { data: courses = [] } = useQuery({
     enabled: !!departmentId,
@@ -111,21 +120,38 @@ function ProfileSetupPage() {
     },
   });
 
+  const onPickPhoto = (f: File) => {
+    setAvatarFile(f);
+    const url = URL.createObjectURL(f);
+    setAvatarPreview(url);
+  };
+
   const save = useMutation({
     mutationFn: async () => {
       if (!user) return;
+      let avatar_url: string | undefined;
+      if (avatarFile) {
+        const ext = avatarFile.name.split(".").pop() || "jpg";
+        const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+        if (upErr) throw upErr;
+        avatar_url = path;
+      }
       const { error } = await supabase
         .from("profiles")
         .update({
           full_name: fullName.trim(),
-          roll_number: rollNumber.trim(),
+          phone: phone.trim(),
           department_id: departmentId,
+          specialization: needsSpec ? specialization : null,
           course_id: courseId,
           semester: Number(semester),
           section_id: sectionId,
-          phone: phone.trim(),
           profile_completed: true,
-        })
+          ...(avatar_url ? { avatar_url } : {}),
+        } as never)
         .eq("id", user.id);
       if (error) throw error;
     },
@@ -139,12 +165,20 @@ function ProfileSetupPage() {
 
   const canSubmit =
     fullName.trim() &&
-    rollNumber.trim() &&
+    phone.trim() &&
     departmentId &&
+    (!needsSpec || specialization) &&
     courseId &&
     semester &&
-    sectionId &&
-    phone.trim();
+    sectionId;
+
+  const initials =
+    fullName
+      ?.split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join("") || "U";
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -172,15 +206,54 @@ function ProfileSetupPage() {
         }}
         className="space-y-5 rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]"
       >
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
+          <div className="relative">
+            <Avatar className="h-24 w-24 border border-border shadow-sm">
+              {avatarPreview && <AvatarImage src={avatarPreview} alt={fullName} />}
+              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-xl font-bold text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="absolute -bottom-1 right-0 grid h-8 w-8 place-items-center rounded-full border border-border bg-background shadow-md hover:bg-accent"
+              aria-label="Choose photo"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onPickPhoto(f);
+              }}
+            />
+          </div>
+          <div className="text-center sm:text-left">
+            <div className="text-sm font-semibold">Profile photo</div>
+            <div className="text-xs text-muted-foreground">
+              Optional. You can change this any time.
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Full name">
             <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           </Field>
-          <Field label="Roll number">
+          <Field label="Email address">
+            <Input value={user?.email ?? ""} readOnly disabled />
+          </Field>
+          <Field label="Phone number">
             <Input
-              value={rollNumber}
-              onChange={(e) => setRollNumber(e.target.value)}
-              placeholder="e.g. 22CSE001"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+91 98765 43210"
+              type="tel"
               required
             />
           </Field>
@@ -189,6 +262,7 @@ function ProfileSetupPage() {
               value={departmentId}
               onValueChange={(v) => {
                 setDepartmentId(v);
+                setSpecialization("");
                 setCourseId("");
                 setSemester("");
                 setSectionId("");
@@ -202,6 +276,18 @@ function ProfileSetupPage() {
               </SelectContent>
             </Select>
           </Field>
+          {needsSpec && (
+            <Field label="Specialization" className="sm:col-span-2">
+              <Select value={specialization} onValueChange={setSpecialization}>
+                <SelectTrigger><SelectValue placeholder="Choose specialization" /></SelectTrigger>
+                <SelectContent>
+                  {specOptions.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
           <Field label="Course">
             <Select
               value={courseId}
@@ -253,20 +339,11 @@ function ProfileSetupPage() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Phone number" className="sm:col-span-2">
-            <Input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
-              type="tel"
-              required
-            />
-          </Field>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Roll number, department, course, semester, and section can only be edited by
-          an administrator after this. You will still be able to update your phone
+          Department, specialization, course, semester, and section can only be
+          edited by an administrator after this. You can still update your phone
           number and profile photo any time.
         </p>
 
