@@ -995,4 +995,3 @@ function SpecializationField({
     </div>
   );
 }
-}
