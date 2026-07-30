@@ -296,26 +296,6 @@ function ProfileSetupPage() {
               </Select>
             </Field>
           )}
-          <Field label="Course">
-            <Select
-              value={courseId}
-              onValueChange={(v) => {
-                setCourseId(v);
-                setSemester("");
-                setSectionId("");
-              }}
-              disabled={!departmentId}
-            >
-              <SelectTrigger><SelectValue placeholder="Choose course" /></SelectTrigger>
-              <SelectContent>
-                {courses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
           <Field label="Semester">
             <Select
               value={semester}
@@ -323,7 +303,7 @@ function ProfileSetupPage() {
                 setSemester(v);
                 setSectionId("");
               }}
-              disabled={!courseId}
+              disabled={!departmentId}
             >
               <SelectTrigger><SelectValue placeholder="Choose semester" /></SelectTrigger>
               <SelectContent>
