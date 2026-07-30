@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Camera, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/profile-setup")({
 function ProfileSetupPage() {
   const { user, refreshRoles } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState("");
@@ -88,6 +89,7 @@ function ProfileSetupPage() {
   const specOptions = specializationsFor(activeDept?.code);
   const needsSpec = specOptions.length > 0;
 
+  // Course is derived from the department (one program per department for V1).
   const { data: courses = [] } = useQuery({
     enabled: !!departmentId,
     queryKey: ["courses-by-dept", departmentId],
@@ -102,17 +104,21 @@ function ProfileSetupPage() {
     },
   });
 
-  const activeCourse = courses.find((c) => c.id === courseId);
-  const semCount = (activeCourse?.duration_years ?? 4) * 2;
+  const derivedCourseId = courses[0]?.id ?? "";
+  useEffect(() => {
+    if (derivedCourseId && derivedCourseId !== courseId) setCourseId(derivedCourseId);
+  }, [derivedCourseId, courseId]);
+
+  const semCount = (courses[0]?.duration_years ?? 4) * 2;
 
   const { data: sections = [] } = useQuery({
-    enabled: !!courseId && !!semester,
-    queryKey: ["sections", courseId, semester],
+    enabled: !!derivedCourseId && !!semester,
+    queryKey: ["sections", derivedCourseId, semester],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sections")
         .select("id, name")
-        .eq("course_id", courseId)
+        .eq("course_id", derivedCourseId)
         .eq("semester", Number(semester))
         .order("name");
       if (error) throw error;
@@ -125,6 +131,9 @@ function ProfileSetupPage() {
     const url = URL.createObjectURL(f);
     setAvatarPreview(url);
   };
+
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneValid = phoneDigits.length === 10;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -143,10 +152,10 @@ function ProfileSetupPage() {
         .from("profiles")
         .update({
           full_name: fullName.trim(),
-          phone: phone.trim(),
+          phone: phoneDigits,
           department_id: departmentId,
           specialization: needsSpec ? specialization : null,
-          course_id: courseId,
+          course_id: derivedCourseId || null,
           semester: Number(semester),
           section_id: sectionId,
           profile_completed: true,
@@ -158,6 +167,7 @@ function ProfileSetupPage() {
     onSuccess: async () => {
       toast.success("Profile completed");
       await refreshRoles();
+      await qc.invalidateQueries();
       void navigate({ to: "/dashboard", replace: true });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -165,10 +175,9 @@ function ProfileSetupPage() {
 
   const canSubmit =
     fullName.trim() &&
-    phone.trim() &&
+    phoneValid &&
     departmentId &&
     (!needsSpec || specialization) &&
-    courseId &&
     semester &&
     sectionId;
 
@@ -251,11 +260,17 @@ function ProfileSetupPage() {
           <Field label="Phone number">
             <Input
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="9876543210"
+              inputMode="numeric"
               type="tel"
               required
             />
+            {phone && !phoneValid && (
+              <p className="mt-1 text-xs text-destructive">
+                Phone number must be exactly 10 digits.
+              </p>
+            )}
           </Field>
           <Field label="Department">
             <Select
@@ -288,26 +303,6 @@ function ProfileSetupPage() {
               </Select>
             </Field>
           )}
-          <Field label="Course">
-            <Select
-              value={courseId}
-              onValueChange={(v) => {
-                setCourseId(v);
-                setSemester("");
-                setSectionId("");
-              }}
-              disabled={!departmentId}
-            >
-              <SelectTrigger><SelectValue placeholder="Choose course" /></SelectTrigger>
-              <SelectContent>
-                {courses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
           <Field label="Semester">
             <Select
               value={semester}
@@ -315,7 +310,7 @@ function ProfileSetupPage() {
                 setSemester(v);
                 setSectionId("");
               }}
-              disabled={!courseId}
+              disabled={!departmentId}
             >
               <SelectTrigger><SelectValue placeholder="Choose semester" /></SelectTrigger>
               <SelectContent>

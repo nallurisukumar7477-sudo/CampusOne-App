@@ -3,10 +3,10 @@
 export const SPECIALIZATIONS_BY_DEPT_CODE: Record<string, string[]> = {
   CSE: [
     "Computer Science and Engineering (Core)",
-    "Artificial Intelligence and Machine Learning (AI & ML)",
-    "Cyber Security",
-    "Data Science",
-    "Information Technology (IT)",
+    "Computer Science and Engineering (Artificial Intelligence & Machine Learning)",
+    "Computer Science and Engineering (Cyber Security)",
+    "Computer Science and Engineering (Data Science)",
+    "Information Technology",
   ],
 };
 
