@@ -151,10 +151,10 @@ function ProfileSetupPage() {
         .from("profiles")
         .update({
           full_name: fullName.trim(),
-          phone: phone.trim(),
+          phone: phoneDigits,
           department_id: departmentId,
           specialization: needsSpec ? specialization : null,
-          course_id: courseId,
+          course_id: derivedCourseId || null,
           semester: Number(semester),
           section_id: sectionId,
           profile_completed: true,
@@ -166,6 +166,7 @@ function ProfileSetupPage() {
     onSuccess: async () => {
       toast.success("Profile completed");
       await refreshRoles();
+      await qc.invalidateQueries();
       void navigate({ to: "/dashboard", replace: true });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -173,10 +174,9 @@ function ProfileSetupPage() {
 
   const canSubmit =
     fullName.trim() &&
-    phone.trim() &&
+    phoneValid &&
     departmentId &&
     (!needsSpec || specialization) &&
-    courseId &&
     semester &&
     sectionId;
 
