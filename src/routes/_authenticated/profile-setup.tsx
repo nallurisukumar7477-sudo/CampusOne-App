@@ -88,6 +88,7 @@ function ProfileSetupPage() {
   const specOptions = specializationsFor(activeDept?.code);
   const needsSpec = specOptions.length > 0;
 
+  // Course is derived from the department (one program per department for V1).
   const { data: courses = [] } = useQuery({
     enabled: !!departmentId,
     queryKey: ["courses-by-dept", departmentId],
@@ -102,17 +103,21 @@ function ProfileSetupPage() {
     },
   });
 
-  const activeCourse = courses.find((c) => c.id === courseId);
-  const semCount = (activeCourse?.duration_years ?? 4) * 2;
+  const derivedCourseId = courses[0]?.id ?? "";
+  useEffect(() => {
+    if (derivedCourseId && derivedCourseId !== courseId) setCourseId(derivedCourseId);
+  }, [derivedCourseId, courseId]);
+
+  const semCount = (courses[0]?.duration_years ?? 4) * 2;
 
   const { data: sections = [] } = useQuery({
-    enabled: !!courseId && !!semester,
-    queryKey: ["sections", courseId, semester],
+    enabled: !!derivedCourseId && !!semester,
+    queryKey: ["sections", derivedCourseId, semester],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sections")
         .select("id, name")
-        .eq("course_id", courseId)
+        .eq("course_id", derivedCourseId)
         .eq("semester", Number(semester))
         .order("name");
       if (error) throw error;
@@ -125,6 +130,9 @@ function ProfileSetupPage() {
     const url = URL.createObjectURL(f);
     setAvatarPreview(url);
   };
+
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneValid = phoneDigits.length === 10;
 
   const save = useMutation({
     mutationFn: async () => {
