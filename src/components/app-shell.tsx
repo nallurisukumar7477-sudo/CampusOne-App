@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   UserCircle,
   BookOpen,
+  Users,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -206,7 +207,12 @@ function NavLinks({
   const { location } = useRouterState();
   const items = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    ...(isFaculty ? [{ to: "/faculty", label: "My classes", icon: BookOpen }] : []),
+    ...(isFaculty
+      ? [
+          { to: "/faculty-panel", label: "Faculty panel", icon: Users },
+          { to: "/faculty", label: "My classes", icon: BookOpen },
+        ]
+      : []),
     { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
     ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
