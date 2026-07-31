@@ -27,8 +27,10 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [signupRole, setSignupRole] = useState<"student" | "faculty">("student");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
 
   const pwChecks = useMemo(() => {
     return {
