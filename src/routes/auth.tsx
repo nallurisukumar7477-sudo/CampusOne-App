@@ -130,6 +130,28 @@ function AuthPage() {
                     placeholder="Jane Doe"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>I am a</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["student", "faculty"] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setSignupRole(r)}
+                        aria-pressed={signupRole === r}
+                        className={cn(
+                          "rounded-xl border px-3 py-2.5 text-sm font-medium capitalize transition-colors",
+                          signupRole === r
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input bg-background text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </TabsContent>
 
               <div className="space-y-2">
