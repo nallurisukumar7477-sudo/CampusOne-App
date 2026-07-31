@@ -225,8 +225,8 @@ function AuthPage() {
 
               {mode === "signup" && (
                 <p className="text-center text-xs text-muted-foreground">
-                  New accounts start as <strong>Student</strong>. An admin can
-                  assign other roles.
+                  You'll sign in as a <strong className="capitalize">{signupRole}</strong>. An admin
+                  can change roles later.
                 </p>
               )}
             </form>
