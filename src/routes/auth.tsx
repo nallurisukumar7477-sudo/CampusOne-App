@@ -27,8 +27,10 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [signupRole, setSignupRole] = useState<"student" | "faculty">("student");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
 
   const pwChecks = useMemo(() => {
     return {
@@ -50,31 +52,46 @@ function AuthPage() {
           ? { label: "Medium", tone: "bg-amber-500", text: "text-amber-600", width: "w-2/3" }
           : { label: "Strong", tone: "bg-emerald-500", text: "text-emerald-600", width: "w-full" };
 
+  const landingFor = async (userId: string) => {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const list = (data ?? []).map((r) => r.role as string);
+    const isStaff = list.some((r) =>
+      ["faculty", "hod", "principal", "placement_cell", "library_staff"].includes(r),
+    );
+    return isStaff && !list.includes("student") ? "/faculty-panel" : "/dashboard";
+  };
+
+  const goToLanding = async (userId: string) => {
+    const to = await landingFor(userId);
+    void navigate({ to, replace: true });
+  };
+
   useEffect(() => {
-    if (!loading && session) void navigate({ to: "/dashboard", replace: true });
-  }, [loading, session, navigate]);
+    if (!loading && session?.user) void goToLanding(session.user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, session]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        void navigate({ to: "/dashboard", replace: true });
+        if (data.user) await goToLanding(data.user.id);
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName },
+            data: { full_name: fullName, role: signupRole },
           },
         });
         if (error) throw error;
         toast.success("Account created");
-        void navigate({ to: "/dashboard", replace: true });
+        if (data.user) await goToLanding(data.user.id);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -82,6 +99,7 @@ function AuthPage() {
       setBusy(false);
     }
   };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -111,6 +129,28 @@ function AuthPage() {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Jane Doe"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>I am a</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["student", "faculty"] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setSignupRole(r)}
+                        aria-pressed={signupRole === r}
+                        className={cn(
+                          "rounded-xl border px-3 py-2.5 text-sm font-medium capitalize transition-colors",
+                          signupRole === r
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input bg-background text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
 
@@ -185,8 +225,8 @@ function AuthPage() {
 
               {mode === "signup" && (
                 <p className="text-center text-xs text-muted-foreground">
-                  New accounts start as <strong>Student</strong>. An admin can
-                  assign other roles.
+                  You'll sign in as a <strong className="capitalize">{signupRole}</strong>. An admin
+                  can change roles later.
                 </p>
               )}
             </form>
