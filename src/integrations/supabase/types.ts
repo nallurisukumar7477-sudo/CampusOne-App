@@ -299,6 +299,135 @@ export type Database = {
           },
         ]
       }
+      timetable_entries: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          faculty_id: string | null
+          id: string
+          room: string | null
+          slot_id: string
+          subject_id: string | null
+          timetable_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          faculty_id?: string | null
+          id?: string
+          room?: string | null
+          slot_id: string
+          subject_id?: string | null
+          timetable_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          faculty_id?: string | null
+          id?: string
+          room?: string | null
+          slot_id?: string
+          subject_id?: string | null
+          timetable_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_entries_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "timetable_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_timetable_id_fkey"
+            columns: ["timetable_id"]
+            isOneToOne: false
+            referencedRelation: "timetables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_slots: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          kind: string
+          label: string
+          period_no: number | null
+          position: number
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          kind?: string
+          label: string
+          period_no?: number | null
+          position: number
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          kind?: string
+          label?: string
+          period_no?: number | null
+          position?: number
+          start_time?: string
+        }
+        Relationships: []
+      }
+      timetables: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          section_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          section_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          section_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetables_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
