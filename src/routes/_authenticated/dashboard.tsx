@@ -52,16 +52,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { user, roles } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Faculty/staff land on the Faculty panel; students keep this dashboard.
-  const facultyOnly =
-    !roles.includes("student") &&
-    roles.some((r) => ["faculty", "hod", "principal"].includes(r));
-  useEffect(() => {
-    if (facultyOnly) void navigate({ to: "/faculty-panel", replace: true });
-  }, [facultyOnly, navigate]);
 
   const { data: profile } = useQuery({
     enabled: !!user,
