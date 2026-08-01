@@ -1,5 +1,6 @@
-import { Fragment, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Fragment } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+
 
 import { useQuery } from "@tanstack/react-query";
 import {
