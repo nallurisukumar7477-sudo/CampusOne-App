@@ -211,12 +211,15 @@ function NavLinks({
       ? [
           { to: "/faculty-panel", label: "Faculty panel", icon: Users },
           { to: "/faculty", label: "My classes", icon: BookOpen },
+          { to: "/timetable-manage", label: "Timetable", icon: CalendarDays },
         ]
       : []),
     ...(!isFaculty ? [{ to: "/attendance", label: "Attendance", icon: ClipboardCheck }] : []),
+    ...(!isFaculty ? [{ to: "/timetable", label: "Timetable", icon: CalendarDays }] : []),
     ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
+
 
   return (
     <>
