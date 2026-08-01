@@ -213,10 +213,11 @@ function NavLinks({
           { to: "/faculty", label: "My classes", icon: BookOpen },
         ]
       : []),
-    { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
+    ...(!isFaculty ? [{ to: "/attendance", label: "Attendance", icon: ClipboardCheck }] : []),
     ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
+
   return (
     <>
       {items.map(({ to, label, icon: Icon }) => {
