@@ -190,6 +190,34 @@ function TimetableManage() {
   const save = useMutation({
     mutationFn: async (publish: boolean | null) => {
       if (!sectionId) throw new Error("Select a section first");
+
+      // Validation is only enforced when publishing to students; drafts can be
+      // saved half-finished.
+      if (publish === true) {
+        const missing: string[] = [];
+        for (const d of DAYS) {
+          for (const slot of teachingSlots) {
+            const key = `${d.value}:${slot.id}`;
+            if (!subjectGrid[key]) missing.push(`${d.short} · ${slot.label}`);
+          }
+        }
+        if (missing.length) {
+          throw new Error(
+            `Assign a subject to every period before publishing. Missing: ${missing
+              .slice(0, 4)
+              .join(", ")}${missing.length > 4 ? ` +${missing.length - 4} more` : ""}`,
+          );
+        }
+        // Guard against duplicate/overlapping period definitions.
+        const seen = new Set<string>();
+        for (const d of DAYS) {
+          for (const slot of teachingSlots) {
+            const k = `${d.value}:${slot.id}`;
+            if (seen.has(k)) throw new Error("Overlapping periods detected");
+            seen.add(k);
+          }
+        }
+      }
       let ttId = timetable?.timetable?.id;
       if (!ttId) {
         const { data, error } = await supabase

@@ -36,6 +36,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { TodayTimetableCard } from "@/components/today-timetable-card";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -62,7 +63,9 @@ function Dashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, email, department:departments(name, code)")
+        .select(
+          "full_name, email, specialization, semester, department:departments(name, code), section:sections(name)",
+        )
         .eq("id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -76,19 +79,25 @@ function Dashboard() {
     <div className="space-y-6 pb-10">
       <HeroBanner
         name={firstName}
+        fullName={profile?.full_name || null}
         department={
           profile?.department
             ? `${profile.department.name} · ${profile.department.code}`
-            : "Department not assigned"
+            : null
         }
+        specialization={profile?.specialization ?? null}
+        semester={profile?.semester ?? null}
+        section={profile?.section?.name ?? null}
       />
 
       <QuickActions />
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <AttendanceCard />
-        <MarksCard />
-        <TodayClassesCard />
+        <TodayTimetableCard />
+        <div className="grid gap-4 lg:col-span-2 lg:content-start">
+          <AttendanceCard />
+          <MarksCard />
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -106,51 +115,72 @@ function Dashboard() {
 
 /* ---------- Hero ---------- */
 
-function HeroBanner({ name, department }: { name: string; department: string }) {
+function HeroBanner({
+  name,
+  fullName,
+  department,
+  specialization,
+  semester,
+  section,
+}: {
+  name: string;
+  fullName: string | null;
+  department: string | null;
+  specialization: string | null;
+  semester: number | null;
+  section: string | null;
+}) {
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
+  const chips = [
+    department && { label: "Department", value: department },
+    specialization && { label: "Specialization", value: specialization },
+    semester && { label: "Semester", value: `Sem ${semester}` },
+    section && { label: "Section", value: section },
+  ].filter(Boolean) as { label: string; value: string }[];
+
   return (
     <div
       className="relative overflow-hidden rounded-3xl border border-border/60 p-6 shadow-[var(--shadow-elegant)] sm:p-8"
       style={{ background: "var(--gradient-primary)" }}
     >
       <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ background: "var(--gradient-mesh)" }} />
-      <div className="relative flex flex-col gap-6 text-primary-foreground sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative flex flex-col gap-5 text-primary-foreground">
         <div className="min-w-0">
           <div className="text-xs font-medium uppercase tracking-[0.18em] opacity-80">
             {today}
           </div>
           <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-            Good to see you, {name}.
+            Welcome back, {name}.
           </h1>
-          <p className="mt-2 max-w-xl text-sm opacity-85 sm:text-base">
-            {department}. You have 3 classes, 2 assignments due this week, and a placement talk on Friday.
-          </p>
+          {fullName && (
+            <p className="mt-1 text-sm font-semibold opacity-90 sm:text-base">{fullName}</p>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <HeroStat icon={CheckCircle2} label="Attendance" value="86%" />
-          <HeroStat icon={TrendingUp} label="CGPA" value="8.4" />
-          <HeroStat icon={ClipboardList} label="Pending" value="2" />
-        </div>
+        {chips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {chips.map((c) => (
+              <div
+                key={c.label}
+                className="rounded-2xl bg-background/15 px-3 py-2 leading-tight backdrop-blur-md ring-1 ring-white/20"
+              >
+                <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">
+                  {c.label}
+                </div>
+                <div className="text-sm font-bold">{c.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function HeroStat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-2 rounded-2xl bg-background/15 px-3 py-2 backdrop-blur-md ring-1 ring-white/20">
-      <Icon className="h-4 w-4 opacity-80" />
-      <div className="leading-tight">
-        <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">{label}</div>
-        <div className="text-sm font-bold">{value}</div>
-      </div>
-    </div>
-  );
-}
+
 
 /* ---------- Quick actions ---------- */
 
@@ -298,62 +328,8 @@ function MarksCard() {
   );
 }
 
-/* ---------- Today's classes ---------- */
 
-const todayClasses = [
-  { time: "09:00", subject: "Data Structures", room: "CSE-204", faculty: "Dr. Menon", status: "now" as const },
-  { time: "11:00", subject: "Database Systems", room: "CSE-107", faculty: "Prof. Rao", status: "next" as const },
-  { time: "14:00", subject: "Operating Systems", room: "Lab-3", faculty: "Dr. Iyer", status: "later" as const },
-  { time: "16:00", subject: "AI Fundamentals", room: "CSE-301", faculty: "Dr. Kapoor", status: "later" as const },
-];
 
-function TodayClassesCard() {
-  return (
-    <Card>
-      <CardHeader
-        icon={Clock}
-        title="Today's classes"
-        subtitle={new Date().toLocaleDateString(undefined, { weekday: "long" })}
-        action={
-          <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
-            Full day
-          </Button>
-        }
-      />
-      <ul className="divide-y divide-border/60 px-2 pb-2">
-        {todayClasses.map((c) => (
-          <li key={c.time} className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-accent/60">
-            <div className="w-12 shrink-0 text-right">
-              <div className="text-sm font-bold tabular-nums">{c.time}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IST</div>
-            </div>
-            <div
-              className={cn(
-                "h-10 w-1 shrink-0 rounded-full",
-                c.status === "now" && "bg-primary",
-                c.status === "next" && "bg-primary/50",
-                c.status === "later" && "bg-border",
-              )}
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <div className="truncate text-sm font-semibold">{c.subject}</div>
-                {c.status === "now" && (
-                  <Badge className="h-4 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary hover:bg-primary/20">
-                    LIVE
-                  </Badge>
-                )}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {c.faculty} · Room {c.room}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
 
 /* ---------- Assignments ---------- */
 

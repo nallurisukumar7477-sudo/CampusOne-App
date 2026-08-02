@@ -1,34 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { CalendarDays, Clock, Coffee, UtensilsCrossed, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { DAYS, isCurrentSlot, isoDay, slotRange } from "@/lib/timetable";
+import { useStudentTimetable } from "@/lib/student-timetable";
 import {
-  DAYS,
-  buildSampleGrid,
-  isCurrentSlot,
-  isoDay,
-  slotRange,
-  type Slot,
-} from "@/lib/timetable";
+  ClassDetailsDialog,
+  type ClassDetails,
+} from "@/components/class-details-dialog";
 
 export const Route = createFileRoute("/_authenticated/timetable")({
   component: TimetablePage,
   head: () => ({
     meta: [
-      { title: "Timetable · CampusOne" },
+      { title: "Timetable \u00b7 CampusOne" },
       {
         name: "description",
         content: "Your weekly class timetable with periods, subjects and mentors.",
       },
-      { property: "og:title", content: "Timetable · CampusOne" },
+      { property: "og:title", content: "Timetable \u00b7 CampusOne" },
       {
         property: "og:description",
-        content: "Weekly Monday–Saturday class schedule for CampusOne students.",
+        content: "Weekly Monday\u2013Saturday class schedule for CampusOne students.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -36,17 +31,10 @@ export const Route = createFileRoute("/_authenticated/timetable")({
   }),
 });
 
-interface EntryRow {
-  day_of_week: number;
-  slot_id: string;
-  faculty_id: string | null;
-  room: string | null;
-  subject: { id: string; name: string; code: string } | null;
-}
-
 function TimetablePage() {
-  const { user } = useAuth();
+  const { profile, slots, cells, isSample, isLoading: loading } = useStudentTimetable();
   const [now, setNow] = useState(() => new Date());
+  const [selected, setSelected] = useState<ClassDetails | null>(null);
   const [day, setDay] = useState<number>(() => {
     const d = isoDay(new Date());
     return d > 6 ? 1 : d;
@@ -57,118 +45,8 @@ function TimetablePage() {
     return () => clearInterval(id);
   }, []);
 
-  const { data: profile } = useQuery({
-    enabled: !!user,
-    queryKey: ["timetable-profile", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "section_id, semester, section:sections(name, course:courses(name, code))",
-        )
-        .eq("id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data as unknown as {
-        section_id: string | null;
-        semester: number | null;
-        section: { name: string; course: { name: string; code: string } | null } | null;
-      } | null;
-    },
-  });
-
-  const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: ["timetable-slots"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("timetable_slots")
-        .select("id, position, label, kind, period_no, start_time, end_time")
-        .order("position");
-      if (error) throw error;
-      return (data ?? []) as Slot[];
-    },
-  });
-
-  const sectionId = profile?.section_id ?? null;
-
-  const { data: published, isLoading: ttLoading } = useQuery({
-    enabled: !!sectionId,
-    queryKey: ["published-timetable", sectionId],
-    queryFn: async () => {
-      const { data: tt, error } = await supabase
-        .from("timetables")
-        .select("id, published")
-        .eq("section_id", sectionId!)
-        .eq("published", true)
-        .maybeSingle();
-      if (error) throw error;
-      if (!tt) return null;
-      const { data: rows, error: eErr } = await supabase
-        .from("timetable_entries")
-        .select("day_of_week, slot_id, faculty_id, room, subject:subjects(id, name, code)")
-        .eq("timetable_id", tt.id);
-      if (eErr) throw eErr;
-      const entries = (rows ?? []) as unknown as EntryRow[];
-      const facultyIds = Array.from(
-        new Set(entries.map((e) => e.faculty_id).filter(Boolean) as string[]),
-      );
-      let names: Record<string, string> = {};
-      if (facultyIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", facultyIds);
-        names = Object.fromEntries(
-          (profs ?? []).map((p) => [p.id, p.full_name || "Faculty"]),
-        );
-      }
-      return { entries, names };
-    },
-  });
-
-  const { data: subjects = [] } = useQuery({
-    queryKey: ["timetable-subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id, name, code")
-        .order("code");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const isSample = !published;
-
-  const sampleGrid = useMemo(
-    () => buildSampleGrid(slots, subjects.map((s) => s.id)),
-    [slots, subjects],
-  );
-
-  const cells = useMemo(() => {
-    const map = new Map<
-      string,
-      { subject: { name: string; code: string } | null; faculty: string | null; room: string | null }
-    >();
-    if (published) {
-      for (const e of published.entries) {
-        map.set(`${e.day_of_week}:${e.slot_id}`, {
-          subject: e.subject,
-          faculty: e.faculty_id ? published.names[e.faculty_id] ?? null : null,
-          room: e.room,
-        });
-      }
-    } else {
-      for (const [key, subjectId] of Object.entries(sampleGrid)) {
-        const s = subjects.find((x) => x.id === subjectId);
-        map.set(key, { subject: s ?? null, faculty: null, room: null });
-      }
-    }
-    return map;
-  }, [published, sampleGrid, subjects]);
-
   const today = isoDay(now);
-  const loading = slotsLoading || ttLoading;
+  const dayLabel = DAYS.find((d) => d.value === day)?.label ?? "";
 
   const sectionLabel = profile?.section
     ? `${profile.section.course?.code ?? ""} · Sem ${profile.semester ?? "—"} · Section ${profile.section.name}`
@@ -267,53 +145,64 @@ function TimetablePage() {
               );
             }
             return (
-              <li
-                key={slot.id}
-                className={cn(
-                  "rounded-2xl border bg-card p-4 shadow-sm transition",
-                  live
-                    ? "border-primary ring-2 ring-primary/25 shadow-[var(--shadow-elegant)]"
-                    : "border-border",
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-bold",
-                      live
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {slot.period_no}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold">
-                        {cell?.subject?.name ?? "Free period"}
-                      </span>
-                      {cell?.subject?.code && (
-                        <Badge variant="secondary" className="rounded-full text-[10px]">
-                          {cell.subject.code}
-                        </Badge>
+              <li key={slot.id}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelected({
+                      subject: cell?.subject?.name ?? "Free period",
+                      code: cell?.subject?.code ?? null,
+                      faculty: cell?.faculty ?? null,
+                      day: dayLabel,
+                      time: slotRange(slot),
+                      period: slot.period_no,
+                      room: cell?.room ?? null,
+                    })
+                  }
+                  className={cn(
+                    "w-full rounded-2xl border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                    live
+                      ? "border-primary ring-2 ring-primary/25 shadow-[var(--shadow-elegant)]"
+                      : "border-border",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-bold",
+                        live
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-primary/10 text-primary",
                       )}
-                      {live && (
-                        <Badge className="rounded-full text-[10px]">Now</Badge>
-                      )}
+                    >
+                      {slot.period_no}
                     </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" /> {slotRange(slot)}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <User className="h-3 w-3" /> {cell?.faculty ?? "Mentor TBA"}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <CalendarDays className="h-3 w-3" /> {slot.label}
-                      </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold">
+                          {cell?.subject?.name ?? "Free period"}
+                        </span>
+                        {cell?.subject?.code && (
+                          <Badge variant="secondary" className="rounded-full text-[10px]">
+                            {cell.subject.code}
+                          </Badge>
+                        )}
+                        {live && <Badge className="rounded-full text-[10px]">Now</Badge>}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3" /> {slotRange(slot)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <User className="h-3 w-3" /> {cell?.faculty ?? "Mentor TBA"}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="h-3 w-3" /> {slot.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </button>
               </li>
             );
           })}
@@ -326,9 +215,15 @@ function TimetablePage() {
           publishes the official timetable.
         </p>
       )}
+
+      <ClassDetailsDialog
+        details={selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+      />
     </div>
   );
 }
+
 
 function EmptyState() {
   return (
