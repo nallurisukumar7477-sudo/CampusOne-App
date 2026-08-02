@@ -179,19 +179,7 @@ function HeroBanner({
   );
 }
 
-}
 
-function HeroStat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-2 rounded-2xl bg-background/15 px-3 py-2 backdrop-blur-md ring-1 ring-white/20">
-      <Icon className="h-4 w-4 opacity-80" />
-      <div className="leading-tight">
-        <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">{label}</div>
-        <div className="text-sm font-bold">{value}</div>
-      </div>
-    </div>
-  );
-}
 
 /* ---------- Quick actions ---------- */
 
