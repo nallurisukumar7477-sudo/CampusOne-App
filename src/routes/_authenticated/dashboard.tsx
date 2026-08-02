@@ -298,62 +298,8 @@ function MarksCard() {
   );
 }
 
-/* ---------- Today's classes ---------- */
 
-const todayClasses = [
-  { time: "09:00", subject: "Data Structures", room: "CSE-204", faculty: "Dr. Menon", status: "now" as const },
-  { time: "11:00", subject: "Database Systems", room: "CSE-107", faculty: "Prof. Rao", status: "next" as const },
-  { time: "14:00", subject: "Operating Systems", room: "Lab-3", faculty: "Dr. Iyer", status: "later" as const },
-  { time: "16:00", subject: "AI Fundamentals", room: "CSE-301", faculty: "Dr. Kapoor", status: "later" as const },
-];
 
-function TodayClassesCard() {
-  return (
-    <Card>
-      <CardHeader
-        icon={Clock}
-        title="Today's classes"
-        subtitle={new Date().toLocaleDateString(undefined, { weekday: "long" })}
-        action={
-          <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs">
-            Full day
-          </Button>
-        }
-      />
-      <ul className="divide-y divide-border/60 px-2 pb-2">
-        {todayClasses.map((c) => (
-          <li key={c.time} className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-accent/60">
-            <div className="w-12 shrink-0 text-right">
-              <div className="text-sm font-bold tabular-nums">{c.time}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IST</div>
-            </div>
-            <div
-              className={cn(
-                "h-10 w-1 shrink-0 rounded-full",
-                c.status === "now" && "bg-primary",
-                c.status === "next" && "bg-primary/50",
-                c.status === "later" && "bg-border",
-              )}
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <div className="truncate text-sm font-semibold">{c.subject}</div>
-                {c.status === "now" && (
-                  <Badge className="h-4 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary hover:bg-primary/20">
-                    LIVE
-                  </Badge>
-                )}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {c.faculty} · Room {c.room}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
 
 /* ---------- Assignments ---------- */
 
