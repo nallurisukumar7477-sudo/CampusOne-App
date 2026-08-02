@@ -46,7 +46,7 @@ function TimetablePage() {
   }, []);
 
   const today = isoDay(now);
-  const loading = slotsLoading || ttLoading;
+  const dayLabel = DAYS.find((d) => d.value === day)?.label ?? "";
 
   const sectionLabel = profile?.section
     ? `${profile.section.course?.code ?? ""} · Sem ${profile.semester ?? "—"} · Section ${profile.section.name}`
