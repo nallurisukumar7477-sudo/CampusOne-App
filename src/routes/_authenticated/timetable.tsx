@@ -145,53 +145,64 @@ function TimetablePage() {
               );
             }
             return (
-              <li
-                key={slot.id}
-                className={cn(
-                  "rounded-2xl border bg-card p-4 shadow-sm transition",
-                  live
-                    ? "border-primary ring-2 ring-primary/25 shadow-[var(--shadow-elegant)]"
-                    : "border-border",
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-bold",
-                      live
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {slot.period_no}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold">
-                        {cell?.subject?.name ?? "Free period"}
-                      </span>
-                      {cell?.subject?.code && (
-                        <Badge variant="secondary" className="rounded-full text-[10px]">
-                          {cell.subject.code}
-                        </Badge>
+              <li key={slot.id}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelected({
+                      subject: cell?.subject?.name ?? "Free period",
+                      code: cell?.subject?.code ?? null,
+                      faculty: cell?.faculty ?? null,
+                      day: dayLabel,
+                      time: slotRange(slot),
+                      period: slot.period_no,
+                      room: cell?.room ?? null,
+                    })
+                  }
+                  className={cn(
+                    "w-full rounded-2xl border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                    live
+                      ? "border-primary ring-2 ring-primary/25 shadow-[var(--shadow-elegant)]"
+                      : "border-border",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-bold",
+                        live
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-primary/10 text-primary",
                       )}
-                      {live && (
-                        <Badge className="rounded-full text-[10px]">Now</Badge>
-                      )}
+                    >
+                      {slot.period_no}
                     </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" /> {slotRange(slot)}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <User className="h-3 w-3" /> {cell?.faculty ?? "Mentor TBA"}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <CalendarDays className="h-3 w-3" /> {slot.label}
-                      </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold">
+                          {cell?.subject?.name ?? "Free period"}
+                        </span>
+                        {cell?.subject?.code && (
+                          <Badge variant="secondary" className="rounded-full text-[10px]">
+                            {cell.subject.code}
+                          </Badge>
+                        )}
+                        {live && <Badge className="rounded-full text-[10px]">Now</Badge>}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3" /> {slotRange(slot)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <User className="h-3 w-3" /> {cell?.faculty ?? "Mentor TBA"}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="h-3 w-3" /> {slot.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </button>
               </li>
             );
           })}
@@ -204,9 +215,15 @@ function TimetablePage() {
           publishes the official timetable.
         </p>
       )}
+
+      <ClassDetailsDialog
+        details={selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+      />
     </div>
   );
 }
+
 
 function EmptyState() {
   return (
