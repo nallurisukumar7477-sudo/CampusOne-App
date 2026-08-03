@@ -20,9 +20,10 @@ export type Database = {
           date: string
           id: string
           marked_by: string | null
+          section_id: string | null
           status: string
           student_id: string
-          subject_id: string
+          subject_id: string | null
           updated_at: string
         }
         Insert: {
@@ -30,9 +31,10 @@ export type Database = {
           date: string
           id?: string
           marked_by?: string | null
+          section_id?: string | null
           status: string
           student_id: string
-          subject_id: string
+          subject_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -40,12 +42,20 @@ export type Database = {
           date?: string
           id?: string
           marked_by?: string | null
+          section_id?: string | null
           status?: string
           student_id?: string
-          subject_id?: string
+          subject_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_records_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_records_subject_id_fkey"
             columns: ["subject_id"]

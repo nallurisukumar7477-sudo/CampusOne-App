@@ -76,8 +76,9 @@ function Header({ isStaff }: { isStaff: boolean }) {
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
           {isStaff
-            ? "Select a subject, mark students present or absent, and save. You can edit today's records anytime."
-            : `Track your presence across subjects and stay above the required ${REQUIRED_PCT}% threshold.`}
+            ? "Pick your department, course and section — today's date is selected automatically. Mark present or absent and save."
+            : `Track your presence and stay above the required ${REQUIRED_PCT}% threshold.`}
+
         </p>
       </div>
     </div>
@@ -88,11 +89,12 @@ function Header({ isStaff }: { isStaff: boolean }) {
 
 type StudentRow = {
   id: string;
-  subject_id: string;
+  subject_id: string | null;
   date: string;
   status: "present" | "absent";
   subjects: { id: string; name: string; code: string } | null;
 };
+
 
 function StudentAttendance({ userId }: { userId: string }) {
   const { data, isLoading } = useQuery({
@@ -122,10 +124,11 @@ function StudentAttendance({ userId }: { userId: string }) {
     { name: string; code: string; attended: number; total: number }
   >();
   for (const r of rows) {
-    const key = r.subject_id;
+    const key = r.subject_id ?? "class";
     const s = perSubject.get(key) ?? {
-      name: r.subjects?.name ?? "Unknown",
-      code: r.subjects?.code ?? "—",
+      name: r.subjects?.name ?? "Daily class attendance",
+      code: r.subjects?.code ?? "CLASS",
+
       attended: 0,
       total: 0,
     };
@@ -264,13 +267,15 @@ function StudentAttendance({ userId }: { userId: string }) {
 /* ================= FACULTY VIEW ================= */
 
 type Dept = { id: string; name: string; code: string };
-type Subject = { id: string; name: string; code: string; department_id: string | null };
+type Course = { id: string; name: string; code: string; department_id: string };
+type Section = { id: string; name: string; semester: number; course_id: string };
 type Student = { id: string; full_name: string; email: string; identifier: string | null };
 
 function FacultyAttendance({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [deptId, setDeptId] = useState<string>("");
-  const [subjectId, setSubjectId] = useState<string>("");
+  const [courseId, setCourseId] = useState<string>("");
+  const [sectionId, setSectionId] = useState<string>("");
   const [date, setDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
   const [search, setSearch] = useState("");
   const [marks, setMarks] = useState<Record<string, "present" | "absent">>({});
@@ -287,31 +292,47 @@ function FacultyAttendance({ userId }: { userId: string }) {
     },
   });
 
-  const { data: subjects } = useQuery({
-    queryKey: ["subjects", deptId],
+  const { data: courses } = useQuery({
+    enabled: !!deptId,
+    queryKey: ["courses", deptId],
     queryFn: async () => {
-      let q = supabase.from("subjects").select("id, name, code, department_id").order("name");
-      if (deptId) q = q.eq("department_id", deptId);
-      const { data, error } = await q;
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, name, code, department_id")
+        .eq("department_id", deptId)
+        .order("name");
       if (error) throw error;
-      return (data ?? []) as Subject[];
+      return (data ?? []) as Course[];
     },
-    enabled: !!departments,
+  });
+
+  const { data: sections } = useQuery({
+    enabled: !!courseId,
+    queryKey: ["sections", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sections")
+        .select("id, name, semester, course_id")
+        .eq("course_id", courseId)
+        .order("semester")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as Section[];
+    },
   });
 
   const { data: students, isLoading: studentsLoading } = useQuery({
-    queryKey: ["students", deptId],
+    enabled: !!sectionId,
+    queryKey: ["attendance-students", sectionId],
     queryFn: async () => {
-      if (!deptId) return [] as Student[];
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, email, identifier")
-        .eq("department_id", deptId)
+        .eq("section_id", sectionId)
         .order("full_name");
       if (error) throw error;
-      // Filter to students only via user_roles
       const ids = (data ?? []).map((p) => p.id);
-      if (ids.length === 0) return [];
+      if (ids.length === 0) return [] as Student[];
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role")
@@ -320,22 +341,20 @@ function FacultyAttendance({ userId }: { userId: string }) {
       const studentIds = new Set((roles ?? []).map((r) => r.user_id));
       return (data ?? []).filter((p) => studentIds.has(p.id)) as Student[];
     },
-    enabled: !!deptId,
   });
 
   const { data: existing, isLoading: existingLoading } = useQuery({
-    queryKey: ["attendance", "class", subjectId, date],
+    enabled: !!sectionId && !!date,
+    queryKey: ["attendance", "section", sectionId, date],
     queryFn: async () => {
-      if (!subjectId || !date) return [];
       const { data, error } = await supabase
         .from("attendance_records")
         .select("id, student_id, status")
-        .eq("subject_id", subjectId)
+        .eq("section_id", sectionId)
         .eq("date", date);
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!subjectId && !!date,
   });
 
   // Prime marks from existing records whenever they change
@@ -358,9 +377,9 @@ function FacultyAttendance({ userId }: { userId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!subjectId) throw new Error("Select a subject");
+      if (!sectionId) throw new Error("Select a section");
       const rows = (students ?? []).map((s) => ({
-        subject_id: subjectId,
+        section_id: sectionId,
         student_id: s.id,
         date,
         status: marks[s.id] ?? "absent",
@@ -369,7 +388,7 @@ function FacultyAttendance({ userId }: { userId: string }) {
       if (rows.length === 0) throw new Error("No students to save");
       const { error } = await supabase
         .from("attendance_records")
-        .upsert(rows, { onConflict: "subject_id,student_id,date" });
+        .upsert(rows, { onConflict: "section_id,student_id,date" });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -385,19 +404,28 @@ function FacultyAttendance({ userId }: { userId: string }) {
     setMarks(next);
   };
 
-  const presentCount = Object.values(marks).filter((v) => v === "present").length;
   const total = students?.length ?? 0;
+  const presentCount = (students ?? []).filter((s) => marks[s.id] === "present").length;
+  const absentCount = total - presentCount;
 
   return (
     <div className="space-y-6">
       {/* Selectors */}
       <div className="rounded-3xl border border-border/60 bg-card/70 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl md:p-6">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Class / Department</label>
-            <Select value={deptId} onValueChange={(v) => { setDeptId(v); setSubjectId(""); }}>
+            <label className="text-xs font-medium text-muted-foreground">Department</label>
+            <Select
+              value={deptId}
+              onValueChange={(v) => {
+                setDeptId(v);
+                setCourseId("");
+                setSectionId("");
+                setMarks({});
+              }}
+            >
               <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select a class" />
+                <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
                 {(departments ?? []).map((d) => (
@@ -409,15 +437,45 @@ function FacultyAttendance({ userId }: { userId: string }) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Subject</label>
-            <Select value={subjectId} onValueChange={setSubjectId} disabled={!deptId}>
+            <label className="text-xs font-medium text-muted-foreground">Course</label>
+            <Select
+              value={courseId}
+              onValueChange={(v) => {
+                setCourseId(v);
+                setSectionId("");
+                setMarks({});
+              }}
+              disabled={!deptId}
+            >
               <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder={deptId ? "Select a subject" : "Pick a class first"} />
+                <SelectValue placeholder={deptId ? "Select course" : "Pick a department"} />
               </SelectTrigger>
               <SelectContent>
-                {(subjects ?? []).map((s) => (
+                {(courses ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} · {c.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Section</label>
+            <Select
+              value={sectionId}
+              onValueChange={(v) => {
+                setSectionId(v);
+                setMarks({});
+              }}
+              disabled={!courseId}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder={courseId ? "Select section" : "Pick a course"} />
+              </SelectTrigger>
+              <SelectContent>
+                {(sections ?? []).map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.name} · {s.code}
+                    Sem {s.semester} · Section {s.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -437,117 +495,137 @@ function FacultyAttendance({ userId }: { userId: string }) {
       </div>
 
       {/* Roster */}
-      {!deptId || !subjectId ? (
-        <EmptyState text="Pick a class and subject to load the student roster." />
+      {!sectionId ? (
+        <EmptyState text="Pick a department, course and section to load the student roster. Today's date is selected automatically." />
       ) : (
-        <div className="rounded-3xl border border-border/60 bg-card/70 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl md:p-6">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-base font-semibold">Roster</h2>
-              <p className="text-xs text-muted-foreground">
-                {total} students · {presentCount} present · {total - presentCount} absent
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or roll no…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-full pl-9 md:w-64"
-                />
+        <>
+          <div className="rounded-3xl border border-border/60 bg-card/70 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl md:p-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Roster</h2>
+                <p className="text-xs text-muted-foreground">
+                  {format(new Date(`${date}T00:00:00`), "EEEE, MMM d, yyyy")} · {total} students
+                </p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => markAll("present")}>
-                All present
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => markAll("absent")}>
-                All absent
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => saveMutation.mutate()}
-                disabled={saveMutation.isPending || total === 0}
-                className="gap-1.5"
-              >
-                {saveMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
-                )}
-                Save
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or roll no…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-full pl-9 md:w-64"
+                  />
+                </div>
+                <Button variant="outline" size="sm" onClick={() => markAll("present")}>
+                  All present
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => markAll("absent")}>
+                  All absent
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending || total === 0}
+                  className="gap-1.5"
+                >
+                  {saveMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
+                  Save attendance
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-border/60">
+              {studentsLoading || existingLoading ? (
+                <div className="space-y-2 p-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-11 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <div className="p-8">
+                  <EmptyState text="No students match your filters." />
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2.5">Student</th>
+                      <th className="hidden px-4 py-2.5 md:table-cell">Roll No</th>
+                      <th className="px-4 py-2.5 text-right">Mark</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {filteredStudents.map((s) => {
+                      const current = marks[s.id];
+                      return (
+                        <tr key={s.id} className="transition hover:bg-muted/30">
+                          <td className="px-4 py-2.5">
+                            <div className="font-medium">{s.full_name || s.email}</div>
+                            <div className="text-xs text-muted-foreground">{s.email}</div>
+                          </td>
+                          <td className="hidden px-4 py-2.5 text-muted-foreground md:table-cell">
+                            {s.identifier ?? "—"}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <Tabs
+                              value={current ?? ""}
+                              onValueChange={(v) =>
+                                setMarks((m) => ({ ...m, [s.id]: v as "present" | "absent" }))
+                              }
+                              className="flex justify-end"
+                            >
+                              <TabsList className="h-8 rounded-full bg-muted/60 p-0.5">
+                                <TabsTrigger
+                                  value="present"
+                                  className="rounded-full px-3 text-xs data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+                                >
+                                  Present
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="absent"
+                                  className="rounded-full px-3 text-xs data-[state=active]:bg-rose-500 data-[state=active]:text-white"
+                                >
+                                  Absent
+                                </TabsTrigger>
+                              </TabsList>
+                            </Tabs>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-border/60">
-            {studentsLoading || existingLoading ? (
-              <div className="space-y-2 p-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-11 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : filteredStudents.length === 0 ? (
-              <div className="p-8">
-                <EmptyState text="No students match your filters." />
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-2.5">Student</th>
-                    <th className="hidden px-4 py-2.5 md:table-cell">Roll No</th>
-                    <th className="px-4 py-2.5 text-right">Mark</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {filteredStudents.map((s) => {
-                    const current = marks[s.id];
-                    return (
-                      <tr key={s.id} className="transition hover:bg-muted/30">
-                        <td className="px-4 py-2.5">
-                          <div className="font-medium">{s.full_name || s.email}</div>
-                          <div className="text-xs text-muted-foreground">{s.email}</div>
-                        </td>
-                        <td className="hidden px-4 py-2.5 text-muted-foreground md:table-cell">
-                          {s.identifier ?? "—"}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Tabs
-                            value={current ?? ""}
-                            onValueChange={(v) =>
-                              setMarks((m) => ({ ...m, [s.id]: v as "present" | "absent" }))
-                            }
-                            className="flex justify-end"
-                          >
-                            <TabsList className="h-8 rounded-full bg-muted/60 p-0.5">
-                              <TabsTrigger
-                                value="present"
-                                className="rounded-full px-3 text-xs data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
-                              >
-                                Present
-                              </TabsTrigger>
-                              <TabsTrigger
-                                value="absent"
-                                className="rounded-full px-3 text-xs data-[state=active]:bg-rose-500 data-[state=active]:text-white"
-                              >
-                                Absent
-                              </TabsTrigger>
-                            </TabsList>
-                          </Tabs>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
+          {/* Live summary */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard label="Total students" value={String(total)} icon={ClipboardCheck} />
+            <StatCard
+              label="Total present"
+              value={String(presentCount)}
+              tone="good"
+              icon={CheckCircle2}
+            />
+            <StatCard
+              label="Total absent"
+              value={String(absentCount)}
+              tone="bad"
+              icon={XCircle}
+            />
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
+
 
 /* ================= SHARED PIECES ================= */
 

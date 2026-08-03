@@ -15,22 +15,18 @@ import {
   YAxis,
 } from "recharts";
 import {
-  BookOpen,
   Calendar,
   CheckCircle2,
   ClipboardList,
-  Clock,
   FileText,
   GraduationCap,
   Megaphone,
   MessagesSquare,
   Plus,
-  Sparkles,
-  TrendingUp,
   UploadCloud,
-  Users,
   type LucideIcon,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -100,15 +96,13 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
-          <AssignmentsCard />
-          <NoticesCard />
-          <EventsCard />
-          <TimetableCard />
-        </div>
-        <AiAssistantCard />
+      <section className="grid gap-4 sm:grid-cols-2">
+        <AssignmentsCard />
+        <NoticesCard />
+        <EventsCard />
+        <TimetableCard />
       </section>
+
     </div>
   );
 }
@@ -187,10 +181,10 @@ function HeroBanner({
 const QUICK_ACTIONS: { label: string; icon: LucideIcon }[] = [
   { label: "Mark attendance", icon: CheckCircle2 },
   { label: "Submit assignment", icon: UploadCloud },
-  { label: "Ask AI tutor", icon: Sparkles },
   { label: "View timetable", icon: Calendar },
   { label: "Message faculty", icon: MessagesSquare },
 ];
+
 
 function QuickActions() {
   return (
@@ -496,55 +490,8 @@ function TimetableCard() {
   );
 }
 
-/* ---------- AI assistant ---------- */
 
-function AiAssistantCard() {
-  return (
-    <Card className="overflow-hidden">
-      <div
-        className="relative border-b border-border/60 p-5"
-        style={{ background: "var(--gradient-primary)" }}
-      >
-        <div className="absolute inset-0 opacity-40 mix-blend-overlay" style={{ background: "var(--gradient-mesh)" }} />
-        <div className="relative flex items-start gap-3 text-primary-foreground">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/20 backdrop-blur ring-1 ring-white/30">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">
-              AI Study Assistant
-            </div>
-            <div className="mt-0.5 text-lg font-bold leading-tight">
-              Ready to help you prep for DBMS mid-sem
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-2 p-4">
-        {[
-          { icon: BookOpen, label: "Summarize today's DBMS lecture" },
-          { icon: Users, label: "Practice viva questions" },
-          { icon: ClipboardList, label: "Plan a 3-day revision" },
-        ].map(({ icon: Icon, label }) => (
-          <button
-            key={label}
-            className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-background/50 p-3 text-left text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-              <Icon className="h-4 w-4" />
-            </div>
-            <span className="min-w-0 flex-1 truncate">{label}</span>
-            <span className="text-xs text-muted-foreground">›</span>
-          </button>
-        ))}
-        <Button className="mt-2 w-full rounded-full" size="sm">
-          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          Ask something new
-        </Button>
-      </div>
-    </Card>
-  );
-}
+
 
 /* ---------- Shared primitives ---------- */
 

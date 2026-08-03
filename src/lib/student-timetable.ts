@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { buildSampleGrid, type Slot } from "@/lib/timetable";
+import { type Slot } from "@/lib/timetable";
 
 export interface ClassCell {
   subject: { name: string; code: string } | null;
@@ -100,26 +100,11 @@ export function useStudentTimetable() {
     },
   });
 
-  const subjectsQuery = useQuery({
-    queryKey: ["timetable-subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id, name, code")
-        .order("code");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
+
 
   const slots = slotsQuery.data ?? [];
-  const subjects = subjectsQuery.data ?? [];
   const published = publishedQuery.data ?? null;
-
-  const sampleGrid = useMemo(
-    () => buildSampleGrid(slots, subjects.map((s) => s.id)),
-    [slots, subjects],
-  );
 
   const cells = useMemo(() => {
     const map = new Map<string, ClassCell>();
@@ -131,20 +116,16 @@ export function useStudentTimetable() {
           room: e.room,
         });
       }
-    } else {
-      for (const [key, subjectId] of Object.entries(sampleGrid)) {
-        const s = subjects.find((x) => x.id === subjectId);
-        map.set(key, { subject: s ?? null, faculty: null, room: null });
-      }
     }
     return map;
-  }, [published, sampleGrid, subjects]);
+  }, [published]);
 
   return {
     profile: profileQuery.data ?? null,
     slots,
     cells,
-    isSample: !published,
+    isPublished: !!published,
     isLoading: slotsQuery.isLoading || publishedQuery.isLoading,
   };
 }
+

@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/timetable")({
 });
 
 function TimetablePage() {
-  const { profile, slots, cells, isSample, isLoading: loading } = useStudentTimetable();
+  const { profile, slots, cells, isPublished, isLoading: loading } = useStudentTimetable();
   const [now, setNow] = useState(() => new Date());
   const [selected, setSelected] = useState<ClassDetails | null>(null);
   const [day, setDay] = useState<number>(() => {
@@ -57,11 +57,12 @@ function TimetablePage() {
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Timetable</h1>
-          {isSample && (
+          {!isPublished && (
             <Badge variant="outline" className="rounded-full text-[10px]">
-              Sample schedule
+              Not published yet
             </Badge>
           )}
+
         </div>
         <p className="text-sm text-muted-foreground">
           {sectionLabel
@@ -209,12 +210,13 @@ function TimetablePage() {
         </ul>
       )}
 
-      {isSample && !loading && slots.length > 0 && (
+      {!isPublished && !loading && slots.length > 0 && (
         <p className="text-center text-xs text-muted-foreground">
-          This is a sample schedule. It will update automatically once your faculty
-          publishes the official timetable.
+          Your faculty hasn't published the timetable for your section yet. It will
+          appear here automatically once they do.
         </p>
       )}
+
 
       <ClassDetailsDialog
         details={selected}
