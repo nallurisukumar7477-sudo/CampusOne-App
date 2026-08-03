@@ -100,15 +100,13 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
-          <AssignmentsCard />
-          <NoticesCard />
-          <EventsCard />
-          <TimetableCard />
-        </div>
-        <AiAssistantCard />
+      <section className="grid gap-4 sm:grid-cols-2">
+        <AssignmentsCard />
+        <NoticesCard />
+        <EventsCard />
+        <TimetableCard />
       </section>
+
     </div>
   );
 }
@@ -187,10 +185,10 @@ function HeroBanner({
 const QUICK_ACTIONS: { label: string; icon: LucideIcon }[] = [
   { label: "Mark attendance", icon: CheckCircle2 },
   { label: "Submit assignment", icon: UploadCloud },
-  { label: "Ask AI tutor", icon: Sparkles },
   { label: "View timetable", icon: Calendar },
   { label: "Message faculty", icon: MessagesSquare },
 ];
+
 
 function QuickActions() {
   return (
