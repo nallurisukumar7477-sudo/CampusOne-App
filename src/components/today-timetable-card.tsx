@@ -18,7 +18,7 @@ import { useStudentTimetable } from "@/lib/student-timetable";
 import { ClassDetailsDialog, type ClassDetails } from "@/components/class-details-dialog";
 
 export function TodayTimetableCard() {
-  const { slots, cells, isSample, isLoading } = useStudentTimetable();
+  const { slots, cells, isPublished, isLoading } = useStudentTimetable();
   const [now, setNow] = useState(() => new Date());
   const [selected, setSelected] = useState<ClassDetails | null>(null);
 
@@ -58,7 +58,7 @@ export function TodayTimetableCard() {
           <div className="truncate text-sm font-bold">Today's timetable</div>
           <div className="truncate text-xs text-muted-foreground">
             {dayLabel}
-            {isSample ? " · sample schedule" : ""}
+            {isPublished ? "" : " · awaiting published timetable"}
           </div>
         </div>
         <Badge variant="outline" className="rounded-full text-[10px]">

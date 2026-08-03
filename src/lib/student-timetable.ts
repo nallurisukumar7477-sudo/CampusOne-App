@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { buildSampleGrid, type Slot } from "@/lib/timetable";
+import { type Slot } from "@/lib/timetable";
 
 export interface ClassCell {
   subject: { name: string; code: string } | null;
@@ -100,17 +100,8 @@ export function useStudentTimetable() {
     },
   });
 
-  const subjectsQuery = useQuery({
-    queryKey: ["timetable-subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id, name, code")
-        .order("code");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
+
 
   const slots = slotsQuery.data ?? [];
   const published = publishedQuery.data ?? null;
