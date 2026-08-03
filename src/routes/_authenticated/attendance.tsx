@@ -76,8 +76,9 @@ function Header({ isStaff }: { isStaff: boolean }) {
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
           {isStaff
-            ? "Select a subject, mark students present or absent, and save. You can edit today's records anytime."
-            : `Track your presence across subjects and stay above the required ${REQUIRED_PCT}% threshold.`}
+            ? "Pick your department, course and section — today's date is selected automatically. Mark present or absent and save."
+            : `Track your presence and stay above the required ${REQUIRED_PCT}% threshold.`}
+
         </p>
       </div>
     </div>
@@ -88,11 +89,12 @@ function Header({ isStaff }: { isStaff: boolean }) {
 
 type StudentRow = {
   id: string;
-  subject_id: string;
+  subject_id: string | null;
   date: string;
   status: "present" | "absent";
   subjects: { id: string; name: string; code: string } | null;
 };
+
 
 function StudentAttendance({ userId }: { userId: string }) {
   const { data, isLoading } = useQuery({
@@ -122,10 +124,11 @@ function StudentAttendance({ userId }: { userId: string }) {
     { name: string; code: string; attended: number; total: number }
   >();
   for (const r of rows) {
-    const key = r.subject_id;
+    const key = r.subject_id ?? "class";
     const s = perSubject.get(key) ?? {
-      name: r.subjects?.name ?? "Unknown",
-      code: r.subjects?.code ?? "—",
+      name: r.subjects?.name ?? "Daily class attendance",
+      code: r.subjects?.code ?? "CLASS",
+
       attended: 0,
       total: 0,
     };
