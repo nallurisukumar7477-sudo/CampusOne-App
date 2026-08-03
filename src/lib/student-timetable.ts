@@ -113,13 +113,7 @@ export function useStudentTimetable() {
   });
 
   const slots = slotsQuery.data ?? [];
-  const subjects = subjectsQuery.data ?? [];
   const published = publishedQuery.data ?? null;
-
-  const sampleGrid = useMemo(
-    () => buildSampleGrid(slots, subjects.map((s) => s.id)),
-    [slots, subjects],
-  );
 
   const cells = useMemo(() => {
     const map = new Map<string, ClassCell>();
@@ -131,20 +125,16 @@ export function useStudentTimetable() {
           room: e.room,
         });
       }
-    } else {
-      for (const [key, subjectId] of Object.entries(sampleGrid)) {
-        const s = subjects.find((x) => x.id === subjectId);
-        map.set(key, { subject: s ?? null, faculty: null, room: null });
-      }
     }
     return map;
-  }, [published, sampleGrid, subjects]);
+  }, [published]);
 
   return {
     profile: profileQuery.data ?? null,
     slots,
     cells,
-    isSample: !published,
+    isPublished: !!published,
     isLoading: slotsQuery.isLoading || publishedQuery.isLoading,
   };
 }
+
