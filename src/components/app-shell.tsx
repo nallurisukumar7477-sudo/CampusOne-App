@@ -213,6 +213,7 @@ function NavLinks({
       ? [
           { to: "/faculty-panel", label: "Faculty panel", icon: Users },
           { to: "/faculty", label: "My classes", icon: BookOpen },
+          { to: "/faculty-attendance", label: "Attendance", icon: ClipboardCheck },
           { to: "/timetable-manage", label: "Timetable", icon: CalendarDays },
         ]
       : []),
@@ -221,6 +222,7 @@ function NavLinks({
     ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
+
 
 
   return (
