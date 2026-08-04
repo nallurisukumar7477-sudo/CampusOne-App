@@ -17,6 +17,7 @@ import { Route as AuthenticatedTimetableRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfileSetupRouteImport } from './routes/_authenticated/profile-setup'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedFacultyPanelRouteImport } from './routes/_authenticated/faculty-panel'
+import { Route as AuthenticatedFacultyAttendanceRouteImport } from './routes/_authenticated/faculty-attendance'
 import { Route as AuthenticatedFacultyRouteImport } from './routes/_authenticated/faculty'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
@@ -64,6 +65,12 @@ const AuthenticatedFacultyPanelRoute =
     path: '/faculty-panel',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFacultyAttendanceRoute =
+  AuthenticatedFacultyAttendanceRouteImport.update({
+    id: '/faculty-attendance',
+    path: '/faculty-attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFacultyRoute = AuthenticatedFacultyRouteImport.update({
   id: '/faculty',
   path: '/faculty',
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/faculty': typeof AuthenticatedFacultyRoute
+  '/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/faculty-panel': typeof AuthenticatedFacultyPanelRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/profile-setup': typeof AuthenticatedProfileSetupRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/faculty': typeof AuthenticatedFacultyRoute
+  '/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/faculty-panel': typeof AuthenticatedFacultyPanelRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/profile-setup': typeof AuthenticatedProfileSetupRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/faculty': typeof AuthenticatedFacultyRoute
+  '/_authenticated/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/_authenticated/faculty-panel': typeof AuthenticatedFacultyPanelRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/profile-setup': typeof AuthenticatedProfileSetupRoute
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/dashboard'
     | '/faculty'
+    | '/faculty-attendance'
     | '/faculty-panel'
     | '/profile'
     | '/profile-setup'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/dashboard'
     | '/faculty'
+    | '/faculty-attendance'
     | '/faculty-panel'
     | '/profile'
     | '/profile-setup'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/attendance'
     | '/_authenticated/dashboard'
     | '/_authenticated/faculty'
+    | '/_authenticated/faculty-attendance'
     | '/_authenticated/faculty-panel'
     | '/_authenticated/profile'
     | '/_authenticated/profile-setup'
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFacultyPanelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/faculty-attendance': {
+      id: '/_authenticated/faculty-attendance'
+      path: '/faculty-attendance'
+      fullPath: '/faculty-attendance'
+      preLoaderRoute: typeof AuthenticatedFacultyAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/faculty': {
       id: '/_authenticated/faculty'
       path: '/faculty'
@@ -269,6 +289,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFacultyRoute: typeof AuthenticatedFacultyRoute
+  AuthenticatedFacultyAttendanceRoute: typeof AuthenticatedFacultyAttendanceRoute
   AuthenticatedFacultyPanelRoute: typeof AuthenticatedFacultyPanelRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProfileSetupRoute: typeof AuthenticatedProfileSetupRoute
@@ -281,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFacultyRoute: AuthenticatedFacultyRoute,
+  AuthenticatedFacultyAttendanceRoute: AuthenticatedFacultyAttendanceRoute,
   AuthenticatedFacultyPanelRoute: AuthenticatedFacultyPanelRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProfileSetupRoute: AuthenticatedProfileSetupRoute,
