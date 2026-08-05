@@ -228,7 +228,8 @@ function NavLinks({
   return (
     <>
       {items.map(({ to, label, icon: Icon }) => {
-        const active = location.pathname.startsWith(to);
+        const path = location.pathname.replace(/\/+$/, "") || "/";
+        const active = path === to || path.startsWith(`${to}/`);
         return (
           <Link
             key={to}
