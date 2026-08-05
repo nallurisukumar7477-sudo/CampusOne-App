@@ -453,7 +453,7 @@ function FacultyAttendance({ userId }: { userId: string }) {
               <SelectContent>
                 {(courses ?? []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name} · {c.code}
+                    {c.code} · {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
