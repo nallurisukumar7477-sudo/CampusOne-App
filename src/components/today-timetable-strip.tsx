@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { DAYS, isCurrentSlot, isoDay, slotRange, toMinutes, fmtTime } from "@/lib/timetable";
+import { DAYS, isCurrentSlot, isoDay, slotRange, toMinutes, formatTime } from "@/lib/timetable";
 import { useStudentTimetable } from "@/lib/student-timetable";
 import { ClassDetailsDialog, type ClassDetails } from "@/components/class-details-dialog";
 
@@ -108,7 +108,7 @@ export function TodayTimetableStrip() {
                         )}
                       >
                         <div className="text-[11px] font-semibold text-muted-foreground">
-                          {fmtTime(slot.start_time)}–{fmtTime(slot.end_time)}
+                          {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                         </div>
                         <Icon className="mx-auto my-2 h-5 w-5 text-muted-foreground" />
                         <div className="truncate text-xs font-semibold">{slot.label}</div>
@@ -130,8 +130,8 @@ export function TodayTimetableStrip() {
                           faculty: cell?.faculty ?? null,
                           day: dayLabel,
                           time: slotRange(slot),
-                          start: fmtTime(slot.start_time),
-                          end: fmtTime(slot.end_time),
+                          start: formatTime(slot.start_time),
+                          end: formatTime(slot.end_time),
                           period: slot.period_no,
                           room: cell?.room ?? null,
                         })
@@ -147,7 +147,7 @@ export function TodayTimetableStrip() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-semibold text-muted-foreground">
-                          {fmtTime(slot.start_time)}–{fmtTime(slot.end_time)}
+                          {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                         </span>
                         <span
                           className={cn(
