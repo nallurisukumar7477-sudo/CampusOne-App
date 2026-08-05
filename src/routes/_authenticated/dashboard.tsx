@@ -32,7 +32,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { TodayTimetableCard } from "@/components/today-timetable-card";
+import { TodayTimetableStrip } from "@/components/today-timetable-strip";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -88,12 +88,11 @@ function Dashboard() {
 
       <QuickActions />
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <TodayTimetableCard />
-        <div className="grid gap-4 lg:col-span-2 lg:content-start">
-          <AttendanceCard />
-          <MarksCard />
-        </div>
+      <TodayTimetableStrip />
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <AttendanceCard />
+        <MarksCard />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">

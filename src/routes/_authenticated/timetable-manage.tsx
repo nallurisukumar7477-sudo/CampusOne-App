@@ -418,7 +418,7 @@ function TimetableManage() {
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
           <CalendarCog className="mx-auto h-8 w-8 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
-            Select a department, course and section to edit its timetable.
+            Please select a section.
           </p>
         </div>
       ) : slotsLoading || ttLoading ? (
