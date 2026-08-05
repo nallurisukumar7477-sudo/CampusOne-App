@@ -1,4 +1,4 @@
-import { Clock, DoorOpen, User, CalendarDays } from "lucide-react";
+import { Clock, DoorOpen, User, CalendarDays, GraduationCap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,12 @@ import { Badge } from "@/components/ui/badge";
 export interface ClassDetails {
   subject: string;
   code?: string | null;
+  course?: string | null;
   faculty: string | null;
   day: string;
   time: string;
+  start?: string | null;
+  end?: string | null;
   period?: number | null;
   room?: string | null;
 }
@@ -46,9 +49,19 @@ export function ClassDetailsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Row icon={User} label="Faculty" value={details?.faculty ?? "Mentor TBA"} />
+          {details?.course && (
+            <Row icon={GraduationCap} label="Course" value={details.course} />
+          )}
+          <Row icon={User} label="Mentor" value={details?.faculty ?? "Mentor TBA"} />
           <Row icon={CalendarDays} label="Day" value={details?.day ?? "—"} />
-          <Row icon={Clock} label="Time" value={details?.time ?? "—"} />
+          {details?.start && details?.end ? (
+            <>
+              <Row icon={Clock} label="Start time" value={details.start} />
+              <Row icon={Clock} label="End time" value={details.end} />
+            </>
+          ) : (
+            <Row icon={Clock} label="Time" value={details?.time ?? "—"} />
+          )}
           {details?.room && <Row icon={DoorOpen} label="Room" value={details.room} />}
         </div>
       </DialogContent>

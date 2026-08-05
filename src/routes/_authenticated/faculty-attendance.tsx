@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarDays, ClipboardCheck, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -157,7 +156,7 @@ function FacultyAttendancePage() {
               <SelectContent>
                 {(courses ?? []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name} · {c.code}
+                    {c.code} · {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -225,16 +224,6 @@ function FacultyAttendancePage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function PageSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-40 rounded-3xl" />
-      <Skeleton className="h-28 rounded-3xl" />
-      <Skeleton className="h-80 rounded-3xl" />
     </div>
   );
 }
