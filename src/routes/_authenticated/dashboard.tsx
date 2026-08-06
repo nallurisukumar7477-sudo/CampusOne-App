@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TodayTimetableStrip } from "@/components/today-timetable-strip";
+import { LatestNoticesCard } from "@/components/latest-notices-card";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -96,6 +97,7 @@ function Dashboard() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
+        <LatestNoticesCard />
         <AssignmentsCard />
         <NoticesCard />
         <EventsCard />
