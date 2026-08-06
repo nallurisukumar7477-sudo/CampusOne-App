@@ -16,6 +16,7 @@ import { Route as AuthenticatedTimetableManageRouteImport } from './routes/_auth
 import { Route as AuthenticatedTimetableRouteImport } from './routes/_authenticated/timetable'
 import { Route as AuthenticatedProfileSetupRouteImport } from './routes/_authenticated/profile-setup'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedNoticesRouteImport } from './routes/_authenticated/notices'
 import { Route as AuthenticatedFacultyPanelRouteImport } from './routes/_authenticated/faculty-panel'
 import { Route as AuthenticatedFacultyAttendanceRouteImport } from './routes/_authenticated/faculty-attendance'
 import { Route as AuthenticatedFacultyRouteImport } from './routes/_authenticated/faculty'
@@ -57,6 +58,11 @@ const AuthenticatedProfileSetupRoute =
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNoticesRoute = AuthenticatedNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFacultyPanelRoute =
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/faculty': typeof AuthenticatedFacultyRoute
   '/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/faculty-panel': typeof AuthenticatedFacultyPanelRoute
+  '/notices': typeof AuthenticatedNoticesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/profile-setup': typeof AuthenticatedProfileSetupRoute
   '/timetable': typeof AuthenticatedTimetableRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/faculty': typeof AuthenticatedFacultyRoute
   '/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/faculty-panel': typeof AuthenticatedFacultyPanelRoute
+  '/notices': typeof AuthenticatedNoticesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/profile-setup': typeof AuthenticatedProfileSetupRoute
   '/timetable': typeof AuthenticatedTimetableRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/faculty': typeof AuthenticatedFacultyRoute
   '/_authenticated/faculty-attendance': typeof AuthenticatedFacultyAttendanceRoute
   '/_authenticated/faculty-panel': typeof AuthenticatedFacultyPanelRoute
+  '/_authenticated/notices': typeof AuthenticatedNoticesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/profile-setup': typeof AuthenticatedProfileSetupRoute
   '/_authenticated/timetable': typeof AuthenticatedTimetableRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/faculty'
     | '/faculty-attendance'
     | '/faculty-panel'
+    | '/notices'
     | '/profile'
     | '/profile-setup'
     | '/timetable'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/faculty'
     | '/faculty-attendance'
     | '/faculty-panel'
+    | '/notices'
     | '/profile'
     | '/profile-setup'
     | '/timetable'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/faculty'
     | '/_authenticated/faculty-attendance'
     | '/_authenticated/faculty-panel'
+    | '/_authenticated/notices'
     | '/_authenticated/profile'
     | '/_authenticated/profile-setup'
     | '/_authenticated/timetable'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notices': {
+      id: '/_authenticated/notices'
+      path: '/notices'
+      fullPath: '/notices'
+      preLoaderRoute: typeof AuthenticatedNoticesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/faculty-panel': {
       id: '/_authenticated/faculty-panel'
       path: '/faculty-panel'
@@ -291,6 +310,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFacultyRoute: typeof AuthenticatedFacultyRoute
   AuthenticatedFacultyAttendanceRoute: typeof AuthenticatedFacultyAttendanceRoute
   AuthenticatedFacultyPanelRoute: typeof AuthenticatedFacultyPanelRoute
+  AuthenticatedNoticesRoute: typeof AuthenticatedNoticesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProfileSetupRoute: typeof AuthenticatedProfileSetupRoute
   AuthenticatedTimetableRoute: typeof AuthenticatedTimetableRoute
@@ -304,6 +324,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFacultyRoute: AuthenticatedFacultyRoute,
   AuthenticatedFacultyAttendanceRoute: AuthenticatedFacultyAttendanceRoute,
   AuthenticatedFacultyPanelRoute: AuthenticatedFacultyPanelRoute,
+  AuthenticatedNoticesRoute: AuthenticatedNoticesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProfileSetupRoute: AuthenticatedProfileSetupRoute,
   AuthenticatedTimetableRoute: AuthenticatedTimetableRoute,
@@ -321,13 +342,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
