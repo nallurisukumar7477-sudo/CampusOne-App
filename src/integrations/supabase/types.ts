@@ -163,6 +163,114 @@ export type Database = {
           },
         ]
       }
+      notice_reads: {
+        Row: {
+          created_at: string
+          id: string
+          notice_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notice_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notice_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_reads_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notices: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          category: Database["public"]["Enums"]["notice_category"]
+          course_id: string | null
+          created_at: string
+          created_by: string
+          department_id: string | null
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["notice_priority"]
+          published: boolean
+          published_at: string
+          section_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          category?: Database["public"]["Enums"]["notice_category"]
+          course_id?: string | null
+          created_at?: string
+          created_by: string
+          department_id?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["notice_priority"]
+          published?: boolean
+          published_at?: string
+          section_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          category?: Database["public"]["Enums"]["notice_category"]
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          department_id?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["notice_priority"]
+          published?: boolean
+          published_at?: string
+          section_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notices_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notices_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notices_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -464,6 +572,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_course_id: { Args: never; Returns: string }
+      current_user_department_id: { Args: never; Returns: string }
       current_user_section_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -482,6 +592,14 @@ export type Database = {
         | "admin"
         | "placement_cell"
         | "library_staff"
+      notice_category:
+        | "general"
+        | "academic"
+        | "exam"
+        | "holiday"
+        | "placement"
+        | "event"
+      notice_priority: "normal" | "important" | "urgent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -618,6 +736,15 @@ export const Constants = {
         "placement_cell",
         "library_staff",
       ],
+      notice_category: [
+        "general",
+        "academic",
+        "exam",
+        "holiday",
+        "placement",
+        "event",
+      ],
+      notice_priority: ["normal", "important", "urgent"],
     },
   },
 } as const
