@@ -203,6 +203,7 @@ export type Database = {
           course_id: string | null
           created_at: string
           created_by: string
+          created_by_name: string
           department_id: string | null
           description: string
           id: string
@@ -220,6 +221,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           created_by: string
+          created_by_name?: string
           department_id?: string | null
           description?: string
           id?: string
@@ -237,6 +239,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           created_by?: string
+          created_by_name?: string
           department_id?: string | null
           description?: string
           id?: string

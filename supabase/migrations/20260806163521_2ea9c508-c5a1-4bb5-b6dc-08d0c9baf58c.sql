@@ -1,0 +1,1 @@
+ALTER TABLE public.notices ADD COLUMN created_by_name text NOT NULL DEFAULT '';
