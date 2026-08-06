@@ -6,7 +6,6 @@ import {
   LogOut,
   Menu,
   Search,
-  Bell,
   ChevronsLeft,
   ChevronsRight,
   ClipboardCheck,
@@ -14,6 +13,7 @@ import {
   BookOpen,
   Users,
   CalendarDays,
+  Megaphone,
 
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/notification-bell";
 import { useAuth, ROLE_LABELS } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -93,15 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Notifications"
-                className="relative rounded-full"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-              </Button>
+              <NotificationBell />
               <button
                 className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 py-1 pl-1 pr-3 shadow-sm backdrop-blur transition hover:shadow-md"
                 aria-label="Account"
@@ -215,10 +208,12 @@ function NavLinks({
           { to: "/faculty", label: "My classes", icon: BookOpen },
           { to: "/faculty-attendance", label: "Attendance", icon: ClipboardCheck },
           { to: "/timetable-manage", label: "Timetable", icon: CalendarDays },
+          { to: "/notices", label: "Notices", icon: Megaphone },
         ]
       : []),
     ...(!isFaculty ? [{ to: "/attendance", label: "Attendance", icon: ClipboardCheck }] : []),
     ...(!isFaculty ? [{ to: "/timetable", label: "Timetable", icon: CalendarDays }] : []),
+    ...(!isFaculty ? [{ to: "/notices", label: "Notices", icon: Megaphone }] : []),
     ...(isStudent ? [{ to: "/profile", label: "My profile", icon: UserCircle }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];

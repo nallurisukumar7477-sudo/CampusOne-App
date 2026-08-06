@@ -20,7 +20,6 @@ import {
   ClipboardList,
   FileText,
   GraduationCap,
-  Megaphone,
   MessagesSquare,
   Plus,
   UploadCloud,
@@ -33,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TodayTimetableStrip } from "@/components/today-timetable-strip";
+import { LatestNoticesCard } from "@/components/latest-notices-card";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -96,8 +96,8 @@ function Dashboard() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
+        <LatestNoticesCard />
         <AssignmentsCard />
-        <NoticesCard />
         <EventsCard />
         <TimetableCard />
       </section>
@@ -352,39 +352,6 @@ function AssignmentsCard() {
               <Badge variant="outline" className="shrink-0 rounded-full text-[10px]">{a.progress}%</Badge>
             </div>
             <Progress value={a.progress} className="mt-2 h-1.5" />
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
-
-/* ---------- Notices ---------- */
-
-const notices = [
-  { title: "Mid-sem exam schedule released", time: "2h ago", tag: "Exams" },
-  { title: "Guest lecture: Startup building", time: "Yesterday", tag: "Events" },
-  { title: "Library timings extended for exams", time: "2 days ago", tag: "Library" },
-];
-
-function NoticesCard() {
-  return (
-    <Card>
-      <CardHeader icon={Megaphone} title="Recent notices" subtitle="From your department" />
-      <ul className="space-y-1 p-2 pt-0">
-        {notices.map((n) => (
-          <li key={n.title} className="flex items-start gap-3 rounded-xl p-3 transition hover:bg-accent/60">
-            <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">{n.title}</div>
-              <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{n.time}</span>
-                <span>·</span>
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                  {n.tag}
-                </span>
-              </div>
-            </div>
           </li>
         ))}
       </ul>
